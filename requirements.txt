@@ -1,0 +1,8 @@
+playwright
+pytest
+pytest-playwright
+allure-pytest
+black
+flake8
+pytest-check
+Faker

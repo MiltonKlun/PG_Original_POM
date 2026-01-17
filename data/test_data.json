@@ -1,0 +1,19 @@
+{
+    "auth": {
+        "invalid_user": {
+            "email": "invalid@example.com",
+            "password": "wrongpassword"
+        },
+        "valid_user": {
+            "email": "realuser@example.com",
+            "password": "realpassword123"
+        }
+    },
+    "contact": {
+        "valid_submission": {
+            "name": "Test QA",
+            "email": "testqa@example.com",
+            "message": "This is a QA Automation test message. Please ignore."
+        }
+    }
+}

@@ -1,0 +1,33 @@
+# General
+__pycache__/
+*.py[cod]
+*$py.class
+.DS_Store
+Thumbs.db
+
+# Virtual Environment
+venv/
+env/
+.env
+.venv/
+
+# IDE Settings
+.vscode/
+.idea/
+
+# Testing & Reports
+.pytest_cache/
+.coverage
+htmlcov/
+reports/
+allure-report/
+allure-results/
+
+# Project Specific Artifacts
+proofs/
+logs/
+screenshots/
+videos/
+
+# Logs
+*.log
