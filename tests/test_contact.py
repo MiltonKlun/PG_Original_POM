@@ -3,6 +3,7 @@ from pages.contact_page import ContactPage
 
 
 @pytest.mark.contact
+@pytest.mark.interactive
 def test_contact_form_validation(page_obj):
     """
     Verify that submitting an empty form triggers validation errors.

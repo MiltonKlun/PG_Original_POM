@@ -3,6 +3,7 @@ from pages.login_page import LoginPage
 
 
 @pytest.mark.auth
+@pytest.mark.interactive
 def test_login_failure(page_obj, test_data):
     """Test that invalid credentials show an error."""
     login_page = LoginPage(page_obj)

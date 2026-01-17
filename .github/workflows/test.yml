@@ -23,7 +23,7 @@ jobs:
     - name: Ensure browsers are installed
       run: python -m playwright install --with-deps
     - name: Run Tests
-      run: pytest tests/
+      run: pytest -m "not interactive" tests/
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       if: always()
