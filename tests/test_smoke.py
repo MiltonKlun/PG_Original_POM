@@ -15,11 +15,5 @@ def test_search_modal_opens(page_obj):
     """Verify search modal can be opened."""
     home = HomePage(page_obj)
     home.navbar.open_search()
-    # Expect the search input to be visible.
-    # Note: There might be multiple .js-search-input elements (desktop/mobile).
-    # We wait for *any* of them to be visible, or refine the selector.
-    # Using specific filter for visibility if possible, or usually just increasing timeout helps if it's animation.
-    # Given the error "resolved to 2 elements", we should be specific.
-    # Let's try matching the one that becomes visible.
-    page_obj.wait_for_selector(".js-search-input >> visible=true", state="visible", timeout=15000)
+    page_obj.wait_for_selector(".js-search-input", state="visible", timeout=5000)
     assert home.is_visible(".js-search-input"), "Search input not visible"
