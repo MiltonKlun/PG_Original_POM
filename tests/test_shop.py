@@ -34,7 +34,9 @@ def test_add_to_cart_flow(page_obj):
         product.page.locator(product.variant_select).first.click()
 
     product.add_to_cart()
-    product.wait_for_element(product.success_link, timeout=15000)
+    # The success link might take a moment to animate in. 
+    # Validating it becomes visible to handle "resolved to hidden" errors.
+    product.page.locator(product.success_link).wait_for(state="visible", timeout=15000)
     assert product.is_visible(
         product.success_link
     ), "Success link 'Ver carrito' did not appear"

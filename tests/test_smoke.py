@@ -16,4 +16,4 @@ def test_search_modal_opens(page_obj):
     home = HomePage(page_obj)
     home.navbar.open_search()
     page_obj.wait_for_selector(".js-search-input >> visible=true", state="visible", timeout=5000)
-    assert home.is_visible(".js-search-input"), "Search input not visible"
+    assert page_obj.is_visible(".js-search-input >> visible=true"), "Search input not visible"
