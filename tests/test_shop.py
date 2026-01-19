@@ -35,9 +35,7 @@ def test_add_to_cart_flow(page_obj):
 
     product.add_to_cart()
     
-    # Robustness: Try to click the toast, but fallback to Navbar if flaky in headless
     try:
-        # Wait up to 5s for the toast (fail fast if not visible)
         product.page.locator(product.success_link).wait_for(state="visible", timeout=5000)
         product.click(product.success_link)
     except Exception:
