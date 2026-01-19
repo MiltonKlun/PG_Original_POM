@@ -15,5 +15,5 @@ def test_search_modal_opens(page_obj):
     """Verify search modal can be opened."""
     home = HomePage(page_obj)
     home.navbar.open_search()
-    page_obj.wait_for_selector(".js-search-input", state="visible", timeout=5000)
+    page_obj.wait_for_selector(".js-search-input >> visible=true", state="visible", timeout=5000)
     assert home.is_visible(".js-search-input"), "Search input not visible"
