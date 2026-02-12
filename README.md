@@ -6,7 +6,7 @@
   <img src="assets/pg_logo.png" alt="PG Original Logo" width="300"/>
   <br>
   <br>
-  <h2>Automated Testing Framework tailored for <a href="https://www.pgoriginal.com/">pgoriginal.com</a>.</h2>
+  <h2>Automated Testing Framework for <a href="https://www.pgoriginal.com/">pgoriginal.com</a>.</h2>
 </div>
 
 
