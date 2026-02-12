@@ -132,7 +132,7 @@ allure serve reports
 
 ## Author
 **Milton Klun**  
-*QA Automation Engineer*
+*QA Automation Engineer | Backend Developer*
 
 <div align="left">
   <a href="https://www.linkedin.com/in/milton-klun/">
