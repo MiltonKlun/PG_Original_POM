@@ -1,4 +1,4 @@
-# PG Original - QA Automation Portfolio
+# PG Original - Page Object Model
 
 <br>
 
