@@ -10,10 +10,15 @@ def test_home_page_load(page_obj):
     assert home.is_visible("header"), "Header is not visible"
     assert home.is_visible("footer"), "Footer is not visible"
 
+
 @pytest.mark.smoke
 def test_search_modal_opens(page_obj):
     """Verify search modal can be opened."""
     home = HomePage(page_obj)
     home.navbar.open_search()
-    page_obj.wait_for_selector(".js-search-input >> visible=true", state="visible", timeout=5000)
-    assert page_obj.is_visible(".js-search-input >> visible=true"), "Search input not visible"
+    page_obj.wait_for_selector(
+        ".js-search-input >> visible=true", state="visible", timeout=5000
+    )
+    assert page_obj.is_visible(
+        ".js-search-input >> visible=true"
+    ), "Search input not visible"

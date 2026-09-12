@@ -10,6 +10,7 @@ class BasePage:
         self.logger = logging.getLogger(self.__class__.__name__)
         if self.__class__.__name__ != "Navbar":
             from components.navbar import Navbar
+
             self.navbar = Navbar(page)
 
     def navigate(self, url: str):
@@ -25,7 +26,7 @@ class BasePage:
 
     def fill(self, selector: str, text: str):
         """Wrapper for fill with logging."""
-        self.logger.info(f"Filling element: {selector} with '{text}'")
+        self.logger.info("Filling element: %s", selector)
         self.page.fill(selector, text)
 
     def get_text(self, selector: str) -> str:

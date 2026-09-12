@@ -1,3 +1,4 @@
+import pytest_check as check
 import pytest
 from pages.shop_page import ShopPage
 from pages.product_page import ProductPage
@@ -12,13 +13,14 @@ def test_shop_product_details(page_obj):
     names = shop.get_product_names()
     assert len(names) > 0, "No products found in shop"
 
-    import pytest_check as check
-
     shop.select_product_by_index(0)
     product = ProductPage(page_obj)
-    
+
     check.is_true(product.is_visible(product.product_price), "Price not visible on PDP")
-    check.is_true(product.is_visible(product.add_to_cart_btn), "Add to Cart button not visible")
+    check.is_true(
+        product.is_visible(product.add_to_cart_btn), "Add to Cart button not visible"
+    )
+
 
 @pytest.mark.integration
 def test_add_to_cart_flow(page_obj):
@@ -34,9 +36,11 @@ def test_add_to_cart_flow(page_obj):
         product.page.locator(product.variant_select).first.click()
 
     product.add_to_cart()
-    
+
     try:
-        product.page.locator(product.success_link).wait_for(state="visible", timeout=5000)
+        product.page.locator(product.success_link).wait_for(
+            state="visible", timeout=5000
+        )
         product.click(product.success_link)
     except Exception:
         print("Success link (toast) not visible/clickable. Using Navbar fallback.")

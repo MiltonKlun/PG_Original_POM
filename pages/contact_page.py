@@ -24,10 +24,6 @@ class ContactPage(BasePage):
 
     def get_error_message(self):
         """Retrieve validation error message."""
-        try:
-            # Specific selector found by browser agent
-            selector = "div.alert.alert-danger"
-            self.wait_for_element(selector, timeout=5000)
-            return self.get_text(selector)
-        except:
-            return ""
+        selector = "div.alert.alert-danger"
+        self.wait_for_element(selector, timeout=5000)
+        return self.get_text(selector)

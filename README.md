@@ -90,7 +90,7 @@
 > *   **Anti-Bot Policy**: The target site `pgoriginal.com` implements strict anti-bot mechanisms. This framework handles them professionally by documenting blocks rather than bypassing them unethically. Use strictly for learning; any bad practice on the website will incur into possible IP bans.
 
 ### Prerequisites
-*   Python 3.8+
+*   Python 3.12
 *   `pip`
 
 ### Installation
@@ -121,12 +121,10 @@ pytest -m auth         # Login/Register
 pytest -m contact      # Forms
 ```
 
-### 📑 Reporting
-Generate professional Allure reports:
-```bash
-pytest --alluredir=reports
-allure serve reports
-```
+### Reporting
+Browser evidence is written to `test-results/`. JUnit and HTML reporting
+are tracked in Phase 6 of [IMPROVEMENTS.md](IMPROVEMENTS.md).
+
 
 ---
 

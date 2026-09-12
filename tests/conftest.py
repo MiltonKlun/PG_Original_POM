@@ -22,6 +22,7 @@ def test_data():
     with open("data/test_data.json", "r") as f:
         return json.load(f)
 
+
 @pytest.fixture(scope="function")
 def fake_data():
     """Generate dynamic test data."""
@@ -29,13 +30,15 @@ def fake_data():
     return {
         "name": fake.name(),
         "email": fake.email(),
-        "message": fake.text(max_nb_chars=200)
+        "message": fake.text(max_nb_chars=200),
     }
+
 
 @pytest.fixture(scope="session")
 def base_url():
     """Defines the application base URL."""
     return BasePage.BASE_URL
+
 
 @pytest.fixture(scope="function")
 def page_obj(page: Page, base_url, request):
@@ -46,7 +49,7 @@ def page_obj(page: Page, base_url, request):
     logger = logging.getLogger("Fixture")
     test_name = request.node.name
     logger.info(f"Setting up test: {test_name}")
-    
+
     page.goto(base_url)
 
     try:
@@ -57,5 +60,5 @@ def page_obj(page: Page, base_url, request):
     except Exception:
         pass
     yield page
-    
+
     logger.info(f"Teardown test: {test_name}")

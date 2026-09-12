@@ -21,13 +21,19 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Ensure browsers are installed
-      run: python -m playwright install --with-deps
-    - name: Run Tests
-      run: pytest -m "not interactive" -o "addopts=--browser chromium --video=retain-on-failure --screenshot=on --output=proofs" tests/
+      run: python -m playwright install --with-deps chromium
+    - name: Static checks
+      run: |
+        python -m black --check pages components tests
+        python -m flake8 pages components tests
+    - name: Run read-only smoke
+      run: python -m pytest -m smoke tests/ --junitxml=reports/results.xml
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: playwright-report
-        path: reports/
+        path: |
+          reports/
+          test-results/
         retention-days: 30

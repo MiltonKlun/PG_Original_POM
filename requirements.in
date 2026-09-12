@@ -1,0 +1,9 @@
+# Direct dependencies. Regenerate universal requirements.txt with uv 0.11.29:
+# uv pip compile requirements.in --universal --python-version 3.12 --generate-hashes -o requirements.txt
+playwright==1.62.0
+pytest==9.1.1
+pytest-playwright==0.9.0
+black==26.5.1
+flake8==7.3.0
+pytest-check==2.9.1
+Faker==40.38.0
