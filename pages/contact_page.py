@@ -11,9 +11,9 @@ class ContactPage(BasePage):
         self.success_message = ".alert-success"
         self.error_message = ".alert-danger"
 
-    def navigate_to_contact(self):
+    def open(self):
         """Navigate to contact page directly."""
-        self.navigate(f"{self.BASE_URL}/contacto/")
+        self.navigate("/contacto/")
 
     def submit_form(self, name, email, message):
         """Fill and submit the contact form."""

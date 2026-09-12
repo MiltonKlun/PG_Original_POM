@@ -15,7 +15,7 @@ class Navbar(BasePage):
 
     def navigate_to_shop(self) -> None:
         """Navigate to the shop page."""
-        self.navigate(f"{self.BASE_URL}/productos/")
+        self.navigate("/productos/")
 
     def navigate_to_home(self) -> None:
         """Navigate to the home page."""

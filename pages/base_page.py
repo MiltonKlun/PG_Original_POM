@@ -3,7 +3,6 @@ import logging
 
 
 class BasePage:
-    BASE_URL = "https://www.pgoriginal.com"
 
     def __init__(self, page: Page):
         self.page = page

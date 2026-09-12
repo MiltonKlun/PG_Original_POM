@@ -1,20 +1,19 @@
 import pytest_check as check
 import pytest
-from pages.shop_page import ShopPage
-from pages.product_page import ProductPage
 
 
 @pytest.mark.smoke
-def test_shop_product_details(page_obj):
+@pytest.mark.live_safe
+def test_shop_product_details(page, shop_page, product_page):
     """Test navigating to shop and viewing a product."""
-    shop = ShopPage(page_obj)
-    shop.navigate_to_shop()
+    shop = shop_page
+    shop.open()
 
     names = shop.get_product_names()
     assert len(names) > 0, "No products found in shop"
 
     shop.select_product_by_index(0)
-    product = ProductPage(page_obj)
+    product = product_page
 
     check.is_true(product.is_visible(product.product_price), "Price not visible on PDP")
     check.is_true(
@@ -22,14 +21,15 @@ def test_shop_product_details(page_obj):
     )
 
 
-@pytest.mark.integration
-def test_add_to_cart_flow(page_obj):
+@pytest.mark.shop
+@pytest.mark.mock_only
+def test_add_to_cart_flow(page, shop_page, product_page):
     """Test full add to cart flow."""
-    shop = ShopPage(page_obj)
-    shop.navigate_to_shop()
+    shop = shop_page
+    shop.open()
     shop.select_product_by_index(0)
 
-    product = ProductPage(page_obj)
+    product = product_page
 
     if product.is_visible(product.variant_select):
         product.page.locator(product.variant_select).first.click()

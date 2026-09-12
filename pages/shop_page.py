@@ -8,8 +8,8 @@ class ShopPage(BasePage):
         self.product_name = ".item-name"
         self.filter_checkbox = ".js-filter-checkbox"
 
-    def navigate_to_shop(self):
-        self.navigate(f"{self.BASE_URL}/productos/")
+    def open(self):
+        self.navigate("/productos/")
 
     def select_product_by_index(self, index: int):
         """Click on the Nth product in the list."""

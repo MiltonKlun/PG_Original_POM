@@ -11,9 +11,9 @@ class LoginPage(BasePage):
         self.error_message = ".js-login-general-error"
         self.login_nav_link = "a[href*='login']"
 
-    def navigate_to_login(self):
+    def open(self):
         """Navigate to login page via header or direct URL."""
-        self.navigate(f"{self.BASE_URL}/account/login/")
+        self.navigate("/account/login/")
 
     def login(self, email, password):
         self.fill(self.email_input, email)

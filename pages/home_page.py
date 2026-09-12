@@ -9,6 +9,9 @@ class HomePage(BasePage):
         self.search_button = ".js-search-button"
         self.search_input = ".js-search-input"
 
+    def open(self):
+        self.navigate("/")
+
     def is_loaded(self):
         """Verify home page specific elements are visible."""
         self.wait_for_element("body")

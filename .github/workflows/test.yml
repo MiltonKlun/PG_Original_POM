@@ -27,7 +27,9 @@ jobs:
         python -m black --check pages components tests
         python -m flake8 pages components tests
     - name: Run read-only smoke
-      run: python -m pytest -m smoke tests/ --junitxml=reports/results.xml
+      env:
+        TARGET: live
+      run: python -m pytest -m "smoke and live_safe" tests/ --junitxml=reports/results.xml
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       if: always()
