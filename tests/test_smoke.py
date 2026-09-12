@@ -1,27 +1,20 @@
+import re
 import pytest
+from playwright.sync_api import expect
+
+pytestmark = [pytest.mark.smoke, pytest.mark.live_safe]
 
 
-@pytest.mark.smoke
-@pytest.mark.live_safe
-def test_home_page_load(page, home_page):
-    """Verify the home page loads correctly."""
-    home = home_page
-    home.open()
-    assert home.is_loaded(), "Home page failed to load title"
-    assert home.is_visible("header"), "Header is not visible"
-    assert home.is_visible("footer"), "Footer is not visible"
+def test_home_page_load(home_page):
+    home_page.open()
+    expect(home_page.page).to_have_title(re.compile("PG Original", re.I))
+    expect(home_page.header).to_be_visible()
+    expect(home_page.footer).to_be_visible()
 
 
-@pytest.mark.smoke
-@pytest.mark.live_safe
-def test_search_modal_opens(page, home_page):
-    """Verify search modal can be opened."""
-    home = home_page
-    home.open()
-    home.navbar.open_search()
-    page.wait_for_selector(
-        ".js-search-input >> visible=true", state="visible", timeout=5000
-    )
-    assert page.is_visible(
-        ".js-search-input >> visible=true"
-    ), "Search input not visible"
+def test_search_modal_opens(home_page):
+    home_page.open()
+    home_page.navbar.open_search()
+    expect(home_page.search.input).to_be_visible()
+    expect(home_page.search.input).to_be_focused()
+    home_page.search.close()

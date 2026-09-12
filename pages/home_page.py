@@ -1,25 +1,12 @@
+from playwright.sync_api import Page
 from pages.base_page import BasePage
 
 
 class HomePage(BasePage):
-    def __init__(self, page):
+    def __init__(self, page: Page) -> None:
         super().__init__(page)
-        self.hero_banner = ".section-slider"
-        self.featured_products = ".section-featured-products"
-        self.search_button = ".js-search-button"
-        self.search_input = ".js-search-input"
+        # Footer has one SHOP link; navigation menu contains repeated categories.
+        self.shop_link = self.footer.get_by_role("link", name="SHOP", exact=True)
 
-    def open(self):
-        self.navigate("/")
-
-    def is_loaded(self):
-        """Verify home page specific elements are visible."""
-        self.wait_for_element("body")
-        return self.page.title() != ""
-
-    def search_for(self, term: str):
-        """Open search and search for a term."""
-        self.click(self.search_button)
-        self.wait_for_element(self.search_input)
-        self.fill(self.search_input, term)
-        self.page.keyboard.press("Enter")
+    def open_shop(self) -> None:
+        self.shop_link.click()

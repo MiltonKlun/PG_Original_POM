@@ -1,50 +1,26 @@
-import pytest_check as check
+import re
 import pytest
+from playwright.sync_api import expect
 
 
 @pytest.mark.smoke
 @pytest.mark.live_safe
-def test_shop_product_details(page, shop_page, product_page):
-    """Test navigating to shop and viewing a product."""
-    shop = shop_page
-    shop.open()
-
-    names = shop.get_product_names()
-    assert len(names) > 0, "No products found in shop"
-
-    shop.select_product_by_index(0)
-    product = product_page
-
-    check.is_true(product.is_visible(product.product_price), "Price not visible on PDP")
-    check.is_true(
-        product.is_visible(product.add_to_cart_btn), "Add to Cart button not visible"
-    )
+def test_shop_product_details(shop_page, product_page):
+    shop_page.open()
+    name = shop_page.first_product_name()
+    shop_page.open_product(name)
+    expect(product_page.heading).to_have_text(name)
+    expect(product_page.price).to_have_text(re.compile(r"\$[\d.,]+"))
+    expect(product_page.add_button).to_be_enabled()
 
 
 @pytest.mark.shop
 @pytest.mark.mock_only
-def test_add_to_cart_flow(page, shop_page, product_page):
-    """Test full add to cart flow."""
-    shop = shop_page
-    shop.open()
-    shop.select_product_by_index(0)
-
-    product = product_page
-
-    if product.is_visible(product.variant_select):
-        product.page.locator(product.variant_select).first.click()
-        product.page.locator(product.variant_select).first.click()
-
-    product.add_to_cart()
-
-    try:
-        product.page.locator(product.success_link).wait_for(
-            state="visible", timeout=5000
-        )
-        product.click(product.success_link)
-    except Exception:
-        print("Success link (toast) not visible/clickable. Using Navbar fallback.")
-        product.navbar.open_cart()
-
-    product.wait_for_element(product.cart_sidebar)
-    assert product.is_visible(product.cart_sidebar), "Cart sidebar did not open"
+def test_add_to_cart_flow(shop_page, product_page):
+    shop_page.open()
+    shop_page.open_product("QA Remera")
+    product_page.select_variant(size="M", color="Negro")
+    product_page.add_to_cart()
+    product_page.cart.open()
+    expect(product_page.cart.item("QA Remera", "M / Negro")).to_be_visible()
+    expect(product_page.cart.quantity("QA Remera", "M / Negro")).to_have_value("1")

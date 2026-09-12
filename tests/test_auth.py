@@ -1,34 +1,20 @@
 import pytest
+from playwright.sync_api import expect
 
 
 @pytest.mark.auth
 @pytest.mark.mock_only
-def test_login_failure(page, test_data, login_page):
-    """Test that invalid credentials show an error."""
-    login_page = login_page
+def test_login_failure(login_page, test_data):
     login_page.open()
-
     user = test_data["auth"]["invalid_user"]
-    login_page.login(user["email"], user["password"])
-    assert login_page.get_error_message() != "", "Error message empty"
+    login_page.fill_credentials(user["email"], user["password"])
+    login_page.submit()
+    expect(login_page.error_message).to_have_text("Credenciales incorrectas")
+    expect(login_page.form).to_be_visible()
 
 
 @pytest.mark.auth
-def test_forgot_password_link(page, login_page):
-    """Verify forgot password link works."""
-    login_page = login_page
+@pytest.mark.live_safe
+def test_forgot_password_link(login_page):
     login_page.open()
-
-    assert login_page.is_visible(
-        login_page.forgot_password_link
-    ), "Forgot password link not visible"
-    login_page.click(login_page.forgot_password_link)
-
-    try:
-        page.wait_for_url("**/reset**", timeout=15000)
-    except Exception:
-        pass
-
-    assert (
-        "reset" in page.url
-    ), f"Failed to navigate to recovery. Current URL: {page.url}"
+    login_page.open_password_reset()
