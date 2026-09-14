@@ -1,17 +1,16 @@
 """Configuration and target enforcement; safe during offline collection."""
 
 import os
-from datetime import datetime, timezone
-from pathlib import Path
-from uuid import uuid4
 import pytest
 from config.settings import Settings, eligible
+from config.reporting import RunReport
 
 SETTINGS = pytest.StashKey[Settings]()
 
 
 def pytest_addoption(parser):
     parser.addoption("--seed", type=int, default=1729, help="Synthetic data seed")
+    parser.addoption("--run-id", default=None, help="Unique evidence run ID")
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -24,11 +23,10 @@ def pytest_configure(config):
         )
     except ValueError as exc:
         raise pytest.UsageError(str(exc)) from exc
-    if not config.option.collectonly and not config.option.log_file:
-        run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        path = Path(__file__).parent / "logs" / f"{run_id}-{uuid4().hex[:8]}.log"
-        path.parent.mkdir(exist_ok=True)
-        config.option.log_file = str(path)
+    if not config.option.collectonly:
+        config.pluginmanager.register(
+            RunReport(config, config.stash[SETTINGS]), "pg-run-report"
+        )
 
 
 def pytest_report_header(config):

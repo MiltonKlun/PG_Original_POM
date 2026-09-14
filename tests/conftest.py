@@ -38,6 +38,21 @@ def configure_ui(request, settings):
     page.set_default_timeout(settings.action_timeout)
     page.set_default_navigation_timeout(settings.navigation_timeout)
     expect.set_options(timeout=settings.assertion_timeout)
+    logger = logging.getLogger("browser")
+    # Capture error types without copying potentially sensitive JS messages.
+    page.on("pageerror", lambda error: logger.error("JavaScript error: %s", error.name))
+
+    def failed_response(response):
+        from urllib.parse import urlsplit
+
+        parts = urlsplit(response.url)
+        if (
+            parts.hostname == urlsplit(settings.base_url).hostname
+            and response.status >= 400
+        ):
+            logger.error("First-party HTTP %s %s", response.status, parts.path)
+
+    page.on("response", failed_response)
     logging.getLogger("test").info(
         "case=%s target=%s seed=%s", request.node.nodeid, settings.target, settings.seed
     )
