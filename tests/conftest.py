@@ -33,6 +33,7 @@ def browser_context_args(browser_context_args, pytestconfig):
 def configure_ui(request, settings):
     if request.node.get_closest_marker("framework"):
         return
+    request.getfixturevalue("network_guard")
     page = request.getfixturevalue("page")
     page.set_default_timeout(settings.action_timeout)
     page.set_default_navigation_timeout(settings.navigation_timeout)
@@ -65,3 +66,41 @@ def contact_page(page):
 @pytest.fixture
 def login_page(page):
     return LoginPage(page)
+
+
+@pytest.fixture
+def network_guard(context, settings):
+    from urllib.parse import urlsplit
+
+    def origin(url):
+        parts = urlsplit(url)
+        return (
+            parts.scheme,
+            parts.hostname,
+            parts.port or (443 if parts.scheme == "https" else 80),
+        )
+
+    external = []
+    if settings.target == "mock":
+
+        def forbidden(url):
+            return urlsplit(url).scheme in {"http", "https"} and origin(url) != origin(
+                settings.base_url
+            )
+
+        def record(request):
+            if forbidden(request.url):
+                parts = urlsplit(request.url)
+                external.append(f"{parts.scheme}://{parts.netloc}{parts.path}")
+
+        def guard(route):
+            if forbidden(route.request.url):
+                route.abort()
+            else:
+                route.continue_()
+
+        # Request events also report redirects that do not invoke route handlers.
+        context.on("request", record)
+        context.route("**/*", guard)
+    yield
+    assert not external, f"Mock attempted external requests: {external}"

@@ -1,0 +1,39 @@
+[
+  {
+    "id": "shirt",
+    "slug": "qa-remera",
+    "name": "QA Remera",
+    "price": 2900000,
+    "sizes": [
+      "S",
+      "M"
+    ],
+    "colors": [
+      "Negro",
+      "Blanco"
+    ],
+    "available": true
+  },
+  {
+    "id": "cap",
+    "slug": "qa-gorra",
+    "name": "QA Gorra",
+    "price": 1500000,
+    "sizes": [],
+    "colors": [],
+    "available": true
+  },
+  {
+    "id": "soldout",
+    "slug": "qa-agotado",
+    "name": "QA Agotado",
+    "price": 1200000,
+    "sizes": [
+      "M"
+    ],
+    "colors": [
+      "Blanco"
+    ],
+    "available": false
+  }
+]

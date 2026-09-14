@@ -60,4 +60,10 @@ def settings(pytestconfig):
 
 @pytest.fixture(scope="session")
 def base_url(settings):
-    return settings.base_url
+    if settings.target == "live":
+        yield settings.base_url
+    else:
+        from scripts.serve_mock import mock_target
+
+        with mock_target(settings) as url:
+            yield url
