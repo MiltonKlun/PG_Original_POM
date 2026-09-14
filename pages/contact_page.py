@@ -5,6 +5,9 @@ from pages.base_page import BasePage
 class ContactPage(BasePage):
     path = "/contacto/"
 
+    def open(self) -> None:
+        self._open_path(self.path)
+
     def __init__(self, page: Page) -> None:
         super().__init__(page)
         # Form scope excludes duplicate newsletter email IDs.

@@ -104,3 +104,11 @@ def network_guard(context, settings):
         context.route("**/*", guard)
     yield
     assert not external, f"Mock attempted external requests: {external}"
+
+
+@pytest.fixture
+def catalog_name(settings, test_data, shop_page):
+    if settings.target == "mock":
+        return test_data["shop"]["shirt"]["name"]
+    shop_page.open()
+    return shop_page.first_product_name()

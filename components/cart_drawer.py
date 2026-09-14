@@ -16,6 +16,10 @@ class CartDrawer:
         self.navbar.open_cart()
         expect(self.root).to_be_visible()
 
+    def close(self) -> None:
+        self.root.get_by_role("button", name="Cerrar carrito", exact=True).click()
+        expect(self.root).to_be_hidden()
+
     def item(self, name: str, variant: str = "") -> Locator:
         row = self.items.filter(has=self.root.page.get_by_text(name, exact=True))
         if variant:

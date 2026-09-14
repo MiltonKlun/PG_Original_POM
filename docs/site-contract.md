@@ -39,3 +39,7 @@ implementation. Record observed differences here before changing assertions.
 ### Pinned-browser follow-up (2026-09-12)
 
 Playwright 1.62 / Chromium 151 verified reset link navigation to `/account/reset` (no trailing slash), heading `CAMBIAR CONTRASE?A`; search close hides the panel; clicking the visible Color=Negro filter label navigates to `/productos/?Color=Negro` and checks the responsive controls. The prior waits failed because of locator/URL assumptions, not bot blocking. `Borrar filtros` uses `.js-remove-all-filters-private`. Cart mutation assertions remain local.
+
+### Filter verification (2026-09-14)
+
+Selecting the visible Negro label checked its hidden native input and returned nine rendered cards, each offering Negro in public variant metadata. Clearing restored `/productos/` with no checked color inputs. Variant position varies, so the POM reads option values rather than assuming color is always option1. The deterministic filter case retains fixed local catalog expectations and remains mock-only. Duplicate image/text links have the same accessible product name; select the observed `a.item-link` inside the named card.

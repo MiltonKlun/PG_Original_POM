@@ -4,7 +4,7 @@ An executable QA automation and portfolio roadmap, based on the actual repositor
 
 **Assessment date:** 2026-09-12. **Baseline:** commit `a0fc620`, branch `feature/framework-improvements`. **Repository:** `MiltonKlun/PG_Original_POM`, public, default branch `main`.
 
-**Status:** implementation in progress; Phases 0 through 4 completed. Checkboxes record verified work only. Following the owner's answers, this document supersedes `01-PG-ORIGINAL-POM.md` as the implementation roadmap; that file remains untouched as historical context. The old plan's “do not relitigate” decisions and checked tasks are not authoritative for this roadmap.
+**Status:** implementation in progress; Phases 0 through 5 completed. Checkboxes record verified work only. Following the owner's answers, this document supersedes `01-PG-ORIGINAL-POM.md` as the implementation roadmap; that file remains untouched as historical context. The old plan's “do not relitigate” decisions and checked tasks are not authoritative for this roadmap.
 
 ## 1. Outcome and scope
 
@@ -191,20 +191,20 @@ Each row below is a required scenario task. Record exact node IDs after implemen
 | 5.11 | Shared | **Reset navigation:** assert the forgot-password link and destination identity, without sending a reset request. |
 | 5.12 | Shared for fill; mock for simulated rules | **Contact:** assert name, email and message retain entered values; parametrize observed boundary/invalid cases with readable IDs; verify validation/control state without submitting. If live CAPTCHA governs enablement, report that limitation and keep any simulated-only enablement case mock-only. |
 
-- [ ] **5.1 — Implement home/navigation row.**
-- [ ] **5.2 — Implement search surface row.**
-- [ ] **5.3 — Implement result and empty-result rows.**
-- [ ] **5.4 — Implement one filter and reset row.**
-- [ ] **5.5 — Implement product identity/current-price row.**
-- [ ] **5.6 — Implement cart identity/variant/add row.**
-- [ ] **5.7 — Implement quantity/subtotal row.**
-- [ ] **5.8 — Implement removal and isolation row.**
-- [ ] **5.9 — Implement unavailable-product row.**
-- [ ] **5.10 — Implement parametrized invalid-login row.**
-- [ ] **5.11 — Implement reset-navigation row.**
-- [ ] **5.12 — Implement contact value/validation row.**
-- [ ] **5.13 — Handle catalog and money deterministically.** Put mock product identifiers/expected values in test data separate from mock implementation. For live read-only PDP checks, capture identity from a uniquely scoped available card and assert it across navigation; if the documented precondition is unavailable, record an explicit data/environment failure rather than silently skipping. Parse displayed ARS values using `Decimal` or integer minor units, never binary float. Include offline parsing tests for observed thousands/decimal separators, spaces/currency label, and invalid values. **Done when:** current-price assertions cannot accidentally parse installment or original prices.
-- [ ] **5.14 — Audit independence and target selection.** Execute every UI module independently and run the full mock suite three times with the same seed, no retries. Use a reordered explicit list of representative search/cart/form nodes to check order independence. Confirm every baseline case maps to stronger coverage and production collection excludes all mock-only cases. **Done when:** all runs pass without unexplained skips/xfails and the coverage table links every required scenario to a node and its evidence.
+- [x] **5.1 — Implement home/navigation row.**
+- [x] **5.2 — Implement search surface row.**
+- [x] **5.3 — Implement result and empty-result rows.**
+- [x] **5.4 — Implement one filter and reset row.**
+- [x] **5.5 — Implement product identity/current-price row.**
+- [x] **5.6 — Implement cart identity/variant/add row.**
+- [x] **5.7 — Implement quantity/subtotal row.**
+- [x] **5.8 — Implement removal and isolation row.**
+- [x] **5.9 — Implement unavailable-product row.**
+- [x] **5.10 — Implement parametrized invalid-login row.**
+- [x] **5.11 — Implement reset-navigation row.**
+- [x] **5.12 — Implement contact value/validation row.**
+- [x] **5.13 — Handle catalog and money deterministically.** Put mock product identifiers/expected values in test data separate from mock implementation. For live read-only PDP checks, capture identity from a uniquely scoped available card and assert it across navigation; if the documented precondition is unavailable, record an explicit data/environment failure rather than silently skipping. Parse displayed ARS values using `Decimal` or integer minor units, never binary float. Include offline parsing tests for observed thousands/decimal separators, spaces/currency label, and invalid values. **Done when:** current-price assertions cannot accidentally parse installment or original prices.
+- [x] **5.14 — Audit independence and target selection.** Execute every UI module independently and run the full mock suite three times with the same seed, no retries. Use a reordered explicit list of representative search/cart/form nodes to check order independence. Confirm every baseline case maps to stronger coverage and production collection excludes all mock-only cases. **Done when:** all runs pass without unexplained skips/xfails and the coverage table links every required scenario to a node and its evidence.
 
 **Exit gate:** required scenarios pass locally; deliberate empty-cart regression fails; no dependency on test order or live catalog prices. If an observed filter/validation contract is unavailable, its row remains blocked with a reason instead of being redefined to match invented HTML.
 
@@ -412,3 +412,7 @@ Avoid framework migrations, deep inheritance, generic page factories, custom ret
 ## Execution evidence ? Phase 4
 
 2026-09-14, `improve/phase-4-storefront`, parent `e464fed`. Tasks 4.1?4.7 complete. 30 checks (22 framework + 8 baseline UI) pass against Python (6.06s) and Docker/nginx (5.27s), no skips. Independent contexts have separate carts. Deliberately broken cart insertion and PDP identity fail their respective assertions; logs in `logs/phase-4/`, evidence in `test-results/sensitivity-*`. Windows occupied-port failure exposed socket reuse and is fixed with exclusive binding; Docker reset navigation exposed an absolute redirect dropping the host port and is fixed with relative redirects. Both are covered by checks. Deviation: default pytest uses an owned daemon server thread with context-manager shutdown, not a child process; this reduces lifecycle complexity and avoids orphan processes. CLI remains foreground and Docker reuse is verified without stopping an external owner. Nginx image is digest-pinned. Next: Phase 5.
+
+## Execution evidence ? Phase 5
+
+2026-09-14, `improve/phase-5-coverage`, parent `05c49d0`. Tasks 5.1?5.14 complete. 61 checks (37 offline + 24 UI) pass on three consecutive final-snapshot runs (11.09s, 11.34s, 12.09s), no retries/skips. All six UI modules also pass independently and representative contact/cart/search cases pass in a reordered run; logs in `logs/phase-5/`. Live UI collection selects 11 non-submitting cases and deselects 13 local-only cases. Named datasets, exact cart totals, native email rules and strict ARS parsing now cover the planned matrix. A separate live read-only observation verified Negro results and clearing; its fixed-count automated scenario stays local. Baseline node mapping updated in `docs/test-strategy.md`. Next: Phase 6.

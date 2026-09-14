@@ -14,7 +14,7 @@ def test_case_data_is_order_independent():
 
 def test_data_path_is_independent_of_working_directory(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
-    assert load_data()["auth"]["invalid_user"]["email"] == "invalid@example.com"
+    assert load_data()["auth"]["invalid_users"][0]["email"] == "unknown@example.com"
 
 
 @pytest.mark.parametrize("content", ["broken JSON", "{}", '{"auth": null}'])

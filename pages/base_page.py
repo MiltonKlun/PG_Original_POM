@@ -20,9 +20,6 @@ class BasePage:
         self.footer = page.locator("footer")
         self.heading = page.get_by_role("heading", level=1)
 
-    def open(self) -> None:
-        self._open_path(self.path)
-
     def _open_path(self, path: str) -> None:
         self.logger.info("Opening %s", path)
         response = self.page.goto(path, wait_until="domcontentloaded")

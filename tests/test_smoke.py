@@ -10,6 +10,8 @@ def test_home_page_load(home_page):
     expect(home_page.page).to_have_title(re.compile("PG Original", re.I))
     expect(home_page.header).to_be_visible()
     expect(home_page.footer).to_be_visible()
+    home_page.open_shop()
+    expect(home_page.page).to_have_url(re.compile(r"/productos/?$"))
 
 
 def test_search_modal_opens(home_page):

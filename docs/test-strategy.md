@@ -82,3 +82,32 @@ No arbitrary coverage percentage is claimed. Coverage measures the scenarios
 above, their assertions and their target-specific evidence. No unexplained
 skips, xfails or retries are accepted in the deterministic gate. Deliberately
 broken cart insertion and product identity must fail their corresponding tests.
+
+## Implemented scenario map (Phase 5)
+
+All eight baseline scenarios are retained and strengthened. CART-ADD moved
+from test_shop.py to `test_cart.py::test_add_to_cart_flow`; auth failure now
+collects two named cases. Contact fill retains the seeded case and adds two
+explicit input cases plus two native invalid-email cases. No contact submission
+or enabled-after-fill claim exists. Tests import expected fixtures from
+`data/test_data.json`, never from the mock catalog.
+
+| Plan tasks | Implemented node(s), under tests/ | Evidence/eligibility |
+|---|---|---|
+| 5.1 | test_smoke.py::test_home_page_load | Mock + observed live; shop navigation included |
+| 5.2 | test_smoke.py::test_search_modal_opens | Open/focus/close; mock + observed live |
+| 5.3 | test_search.py::test_search_results, test_search_empty | Mock; live-safe discovery supported |
+| 5.4 | test_shop.py::test_filter_color_and_clear | Mock fixed counts; separate live observation recorded |
+| 5.5 | test_shop.py::test_shop_product_details | Selected identity and positive ARS current price |
+| 5.6 | test_cart.py::test_add_to_cart_flow | Mock identity/variant/quantity/line/subtotal |
+| 5.7 | test_cart.py::test_cart_quantity | Mock quantity 1 to 2, exact amounts |
+| 5.8 | test_cart.py::test_cart_remove, test_cart_starts_empty | Mock removal/zero/isolated initial state |
+| 5.9 | test_shop.py::test_unavailable_product | Mock disabled action, empty cart |
+| 5.10 | test_auth.py::test_login_failure, test_login_native_validation | Mock: 2 rejection + 3 native validation cases |
+| 5.11 | test_auth.py::test_forgot_password_link | Observed slash-optional route + heading |
+| 5.12 | test_contact.py::test_contact_* | 6 non-submitting cases; simulated disabled check mock-only |
+| 5.13 | framework/test_money.py | 15 pure parsing cases; no binary floating-point |
+
+Test module runs, reordered representative cases, and repeated full runs are
+recorded in the phase execution log. Passes are target-specific, not a claim
+that all live scenarios passed. Browser evidence paths use `test-results/`.

@@ -11,9 +11,29 @@ DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "test_data.json"
 def load_data(path: Path = DATA_PATH) -> dict:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-        user = data["auth"]["invalid_user"]
-        if not all(isinstance(user[k], str) and user[k] for k in ("email", "password")):
-            raise ValueError("invalid_user email/password must be nonempty strings")
+        for rows, keys in [
+            (data["auth"]["invalid_users"], ("id", "email", "password")),
+            (data["contact_cases"], ("id", "name", "email", "message")),
+        ]:
+            if not isinstance(rows, list) or not rows:
+                raise ValueError("Named test cases must be a nonempty list")
+            ids = set()
+            for row in rows:
+                if not all(isinstance(row[k], str) and row[k] for k in keys):
+                    raise ValueError("Case fields must be nonempty strings")
+                if row["id"] in ids:
+                    raise ValueError("Case IDs must be unique")
+                ids.add(row["id"])
+        for key in ("shirt", "cap", "unavailable"):
+            if not isinstance(data["shop"][key]["name"], str):
+                raise ValueError("Product name must be a string")
+        for key in ("shirt", "cap"):
+            price = data["shop"][key]["price"]
+            if type(price) is not int or price <= 0:
+                raise ValueError("Price must be positive integer minor units")
+        for key in ("size", "color", "variant"):
+            if not isinstance(data["shop"]["shirt"][key], str):
+                raise ValueError("Variant fields must be strings")
         return data
     except (OSError, ValueError, KeyError, TypeError) as exc:
         raise ValueError(f"Invalid test data in {path}: {exc}") from exc

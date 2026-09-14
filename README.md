@@ -116,7 +116,7 @@ pytest tests/
 **Run Specific Features:**
 ```bash
 pytest -m smoke        # Health checks
-pytest -m integration  # Shopping flows
+pytest -m shop  # Shopping flows
 pytest -m auth         # Login/Register
 pytest -m contact      # Forms
 ```

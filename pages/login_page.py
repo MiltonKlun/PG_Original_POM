@@ -6,6 +6,9 @@ from pages.base_page import BasePage
 class LoginPage(BasePage):
     path = "/account/login/"
 
+    def open(self) -> None:
+        self._open_path(self.path)
+
     def __init__(self, page: Page) -> None:
         super().__init__(page)
         self.form = page.locator("#login-form")
@@ -18,6 +21,7 @@ class LoginPage(BasePage):
         self.forgot_password_link = self.form.get_by_role(
             "link", name=re.compile("Olvidaste")
         )
+        self.invalid_inputs = self.form.locator("input:invalid")
         self.error_message = self.form.locator(".js-login-general-error")
         self.reset_heading = page.get_by_role(
             "heading", name=re.compile("CAMBIAR CONTRASE", re.I)
