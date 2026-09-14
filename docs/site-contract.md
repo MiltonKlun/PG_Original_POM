@@ -23,11 +23,11 @@ may contain session data and must not be published wholesale.
 
 ## Simulation differences
 
-The local storefront will use synthetic catalog data and browser-context-local
+The local storefront uses synthetic catalog data and browser-context-local
 cart storage. Negative login, unavailable stock, cart arithmetic and any
 additional contact validation are simulation-only. Shared POM selectors must
 follow observed markup; no target-specific branches or invented production
-test IDs. The simulation will not include challenge providers, analytics,
+test IDs. The simulation does not include challenge providers, analytics,
 newsletter delivery, payments or external assets.
 
 ## Follow-up evidence
@@ -38,7 +38,7 @@ implementation. Record observed differences here before changing assertions.
 
 ### Pinned-browser follow-up (2026-09-12)
 
-Playwright 1.62 / Chromium 151 verified reset link navigation to `/account/reset` (no trailing slash), heading `CAMBIAR CONTRASE?A`; search close hides the panel; clicking the visible Color=Negro filter label navigates to `/productos/?Color=Negro` and checks the responsive controls. The prior waits failed because of locator/URL assumptions, not bot blocking. `Borrar filtros` uses `.js-remove-all-filters-private`. Cart mutation assertions remain local.
+Playwright 1.62 / Chromium 151 verified reset link navigation to `/account/reset` (no trailing slash), heading `CAMBIAR CONTRASEÑA`; search close hides the panel; clicking the visible Color=Negro filter label navigates to `/productos/?Color=Negro` and checks the responsive controls. The prior waits failed because of locator/URL assumptions, not bot blocking. `Borrar filtros` uses `.js-remove-all-filters-private`. Cart mutation assertions remain local.
 
 ### Filter verification (2026-09-14)
 
