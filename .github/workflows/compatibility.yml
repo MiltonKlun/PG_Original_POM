@@ -1,0 +1,64 @@
+name: Mock browser compatibility
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 9 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compatibility:
+    name: Mock compatibility (${{ matrix.browser }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - browser: firefox
+            device: ''
+            selection: not framework
+          - browser: webkit
+            device: ''
+            selection: not framework
+          - browser: chromium
+            device: Pixel 7
+            selection: smoke
+    env:
+      TARGET: mock
+      BROWSER: ${{ matrix.browser }}
+      DEVICE: ${{ matrix.device }}
+      SELECTION: ${{ matrix.selection }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: python -m pip install --require-hashes -r requirements.txt
+      - run: python -m playwright install --with-deps "$BROWSER"
+      - name: Run mock scenarios
+        run: |
+          args=(--browser "$BROWSER" --run-id "compat-$BROWSER")
+          if [ -n "$DEVICE" ]; then args+=(--device "$DEVICE"); fi
+          python -m pytest tests -m "$SELECTION" "${args[@]}"
+      - name: Summarize results
+        if: always()
+        run: python scripts/ci_summary.py "reports/compat-$BROWSER/summary.json"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: mock-compat-${{ matrix.browser }}-${{ github.run_attempt }}
+          path: |
+            reports/
+            test-results/
+            logs/
+          retention-days: 14
+          if-no-files-found: error

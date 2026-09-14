@@ -111,3 +111,11 @@ or enabled-after-fill claim exists. Tests import expected fixtures from
 Test module runs, reordered representative cases, and repeated full runs are
 recorded in the phase execution log. Passes are target-specific, not a claim
 that all live scenarios passed. Browser evidence paths use `test-results/`.
+
+Phase 7 adds `test_navigation.py::test_menu_reaches_product` (mock-only smoke).
+Current collection is 62 cases: 37 offline + 25 UI. Chromium Pixel 7 emulation
+selects four mock smoke cases, covering menu, search and product access. Live
+smoke selects three read-only cases and deselects 59; the broader live-safe UI
+collection still contains 11 cases, of which only those three are in the weekly
+smoke. Live responsive-menu coverage remains unverified. See
+`ci-maintenance.md` for exact jobs and remaining remote acceptance gates.

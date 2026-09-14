@@ -51,6 +51,11 @@ async function initialize() {
     const product = products.find(p => path === '/productos/' + p.slug);
     if (!product) throw new Error('Unknown fixture product');
     main.innerHTML = productHTML(product);
+    // The client form has an animation placeholder sharing the button's class.
+    const placeholder = document.createElement('div');
+    placeholder.className = 'js-addtocart js-addtocart-placeholder disabled';
+    placeholder.hidden = true;
+    document.querySelector('#product_form').append(placeholder);
     document.querySelectorAll('.js-insta-variant').forEach(option => option.addEventListener('click', () => {
       document.querySelectorAll(`[data-kind="${option.dataset.kind}"]`).forEach(el=>el.classList.remove('selected'));
       option.classList.add('selected');

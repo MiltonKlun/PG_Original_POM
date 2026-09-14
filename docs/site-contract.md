@@ -43,3 +43,16 @@ Playwright 1.62 / Chromium 151 verified reset link navigation to `/account/reset
 ### Filter verification (2026-09-14)
 
 Selecting the visible Negro label checked its hidden native input and returned nine rendered cards, each offering Negro in public variant metadata. Clearing restored `/productos/` with no checked color inputs. Variant position varies, so the POM reads option values rather than assuming color is always option1. The deterministic filter case retains fixed local catalog expectations and remains mock-only. Duplicate image/text links have the same accessible product name; select the observed `a.item-link` inside the named card.
+
+### Live smoke and selector regression (2026-09-14)
+
+The first three-case live smoke run passed home/navigation and search but failed
+the PDP assertion: `.js-addtocart` matched both the actual submit input and a
+decorative `div.js-addtocart-placeholder` in the same form. This was an automation
+locator defect, not a failed purchase or bot block. The POM now selects
+`input[type="submit"].js-addtocart`; the mock includes the duplicate placeholder
+so existing product/cart scenarios detect regression. The corrected run passed
+all three cases in 8.06 seconds (Chromium, seed 1729). No add action was taken.
+
+Mobile emulation covers the simulation's menu/search/product access. The live
+responsive menu contract has not been verified and is not claimed as coverage.
