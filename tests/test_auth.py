@@ -1,51 +1,39 @@
+import re
 import pytest
-from pages.login_page import LoginPage
+from playwright.sync_api import expect
+from config.test_data import load_data
 
 
 @pytest.mark.auth
-@pytest.mark.interactive
-def test_login_failure(page_obj, test_data):
-    """Test that invalid credentials show an error."""
-    login_page = LoginPage(page_obj)
-    login_page.navigate_to_login()
+@pytest.mark.mock_only
+@pytest.mark.parametrize(
+    "user", load_data()["auth"]["invalid_users"], ids=lambda user: user["id"]
+)
+def test_login_failure(login_page, user):
+    login_page.open()
+    login_page.fill_credentials(user["email"], user["password"])
+    login_page.submit()
+    expect(login_page.error_message).to_have_text("Credenciales incorrectas")
+    expect(login_page.form).to_be_visible()
+    expect(login_page.page).to_have_url(re.compile(r"/account/login/?$"))
 
-    try:
-        user = test_data["auth"]["invalid_user"]
-        login_page.login(user["email"], user["password"])
-        error = login_page.get_error_message()
-        assert error != "", "Error message empty"
-    except Exception as e:
-        try:
-            page_obj.evaluate(
-                """
-                const div = document.createElement('div');
-                div.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,0,0,0.9);color:white;z-index:10000;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:24px;font-family:sans-serif;text-align:center;';
-                div.innerHTML = '<h1>⚠️ AUTOMATION DETECTED ⚠️</h1><p>Server blocked login interaction.</p><p>Timeout or Connection Hang.</p>';
-                document.body.appendChild(div);
-            """
-            )
-            page_obj.wait_for_timeout(3000)
-        except:
-            pass
-
-        pytest.fail(f"Login Failure (likely blocked): {e}")
 
 @pytest.mark.auth
-def test_forgot_password_link(page_obj):
-    """Verify forgot password link works."""
-    login_page = LoginPage(page_obj)
-    login_page.navigate_to_login()
-    
-    assert login_page.is_visible(
-        login_page.forgot_password_link
-    ), "Forgot password link not visible"
-    login_page.click(login_page.forgot_password_link)
+@pytest.mark.mock_only
+@pytest.mark.parametrize(
+    "email,password",
+    [("not-an-email", "unused"), ("", "unused"), ("qa@example.com", "")],
+    ids=["malformed-email", "missing-email", "missing-password"],
+)
+def test_login_native_validation(login_page, email, password):
+    login_page.open()
+    login_page.fill_credentials(email, password)
+    expect(login_page.invalid_inputs).to_have_count(1)
+    expect(login_page.error_message).to_be_hidden()
 
-    try:
-        page_obj.wait_for_url("**/reset**", timeout=15000)
-    except Exception:
-        pass
 
-    assert (
-        "reset" in page_obj.url
-    ), f"Failed to navigate to recovery. Current URL: {page_obj.url}"
+@pytest.mark.auth
+@pytest.mark.live_safe
+def test_forgot_password_link(login_page):
+    login_page.open()
+    login_page.open_password_reset()

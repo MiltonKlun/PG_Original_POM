@@ -1,41 +1,29 @@
-from playwright.sync_api import Page
 import logging
+from playwright.sync_api import Page
+from components.navbar import Navbar
+from components.search_modal import SearchModal
+from components.cart_drawer import CartDrawer
+from components.cookie_banner import CookieBanner
 
 
 class BasePage:
-    BASE_URL = "https://www.pgoriginal.com"
+    path = "/"
 
-    def __init__(self, page: Page):
+    def __init__(self, page: Page) -> None:
         self.page = page
-        self.logger = logging.getLogger(self.__class__.__name__)
-        if self.__class__.__name__ != "Navbar":
-            from components.navbar import Navbar
-            self.navbar = Navbar(page)
+        self.logger = logging.getLogger(type(self).__name__)
+        self.navbar = Navbar(page)
+        self.search = SearchModal(page)
+        self.cart = CartDrawer(page)
+        self.cookies = CookieBanner(page)
+        self.header = page.locator("header")
+        self.footer = page.locator("footer")
+        self.heading = page.get_by_role("heading", level=1)
 
-    def navigate(self, url: str):
-        """Navigate to a URL and wait for load state."""
-        self.logger.info(f"Navigating to {url}")
-        self.page.goto(url)
-        self.page.wait_for_load_state("domcontentloaded")
-
-    def click(self, selector: str):
-        """Wrapper for click with logging."""
-        self.logger.info(f"Clicking element: {selector}")
-        self.page.click(selector)
-
-    def fill(self, selector: str, text: str):
-        """Wrapper for fill with logging."""
-        self.logger.info(f"Filling element: {selector} with '{text}'")
-        self.page.fill(selector, text)
-
-    def get_text(self, selector: str) -> str:
-        """Get text content of an element."""
-        return self.page.text_content(selector)
-
-    def wait_for_element(self, selector: str, state="visible", timeout=10000):
-        """Wait for element state."""
-        self.page.wait_for_selector(selector, state=state, timeout=timeout)
-
-    def is_visible(self, selector: str) -> bool:
-        """Check if element is visible."""
-        return self.page.is_visible(selector)
+    def _open_path(self, path: str) -> None:
+        self.logger.info("Opening %s", path)
+        response = self.page.goto(path, wait_until="domcontentloaded")
+        if response is None or not response.ok:
+            status = response.status if response else "no response"
+            raise RuntimeError(f"Navigation to {path} failed: {status}")
+        self.cookies.dismiss_if_present()

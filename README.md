@@ -1,146 +1,193 @@
-# PG Original - Page Object Model
+# PG Original — QA Automation Portfolio
 
-<br>
+[![Mock CI](https://github.com/MiltonKlun/PG_Original_POM/actions/workflows/ci.yml/badge.svg)](https://github.com/MiltonKlun/PG_Original_POM/actions/workflows/ci.yml)
+[![Live read-only smoke](https://github.com/MiltonKlun/PG_Original_POM/actions/workflows/live-smoke.yml/badge.svg)](https://github.com/MiltonKlun/PG_Original_POM/actions/workflows/live-smoke.yml)
+[![Mock compatibility](https://github.com/MiltonKlun/PG_Original_POM/actions/workflows/compatibility.yml/badge.svg)](https://github.com/MiltonKlun/PG_Original_POM/actions/workflows/compatibility.yml)
 
-<div align="center">
-  <img src="assets/pg_logo.png" alt="PG Original Logo" width="300"/>
-  <br>
-  <br>
-  <h2>Automated Testing Framework for <a href="https://www.pgoriginal.com/">pgoriginal.com</a>.</h2>
-</div>
+Python 3.12, synchronous Playwright and pytest automation for the
+[PG Original client storefront](https://www.pgoriginal.com/). This portfolio
+demonstrates POM composition, isolated scenarios, meaningful cart assertions,
+reproducible data and failure investigation.
 
+**Two targets, different evidence:** the default local simulation tests the
+automation against synthetic products and an observed UI contract. Separate
+read-only live checks validate selected client pages. Mock success does not
+certify production shopping, authentication or delivery.
 
-<div align="center">
-  <a href="https://www.pgoriginal.com/">
-    <img src="https://img.shields.io/badge/Client-PG%20Original-000?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Website"/>
-  </a>
-  <a href="https://www.instagram.com/pgoriginalind/">
-    <img src="https://img.shields.io/badge/Instagram-@pgoriginalind-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram"/>
-  </a>
-</div>
+Hosted acceptance is verified in [PR #1](https://github.com/MiltonKlun/PG_Original_POM/pull/1):
+[mock CI](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922388895),
+[deliberate failure evidence](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922413481),
+[live smoke](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559492), and
+[compatibility](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559490).
+The badges above follow the default branch; its new workflow status and schedules
+become active after merge. Final merge and branch protection remain pending.
+See [IMPROVEMENTS.md](IMPROVEMENTS.md), the [case study](docs/case-study.md), and
+[release evidence](docs/evidence/release-verification.json).
 
----
+## Architecture
 
-<div align="center">
-  <img src="https://img.shields.io/badge/Status-Complete-success" alt="Status"/>
-  <img src="https://img.shields.io/badge/Tests-Passing-green" alt="Tests"/>
-  <img src="https://img.shields.io/badge/Python-3.12-blue" alt="Python"/>
-  <img src="https://img.shields.io/badge/Framework-Playwright-orange" alt="Framework"/>
-</div>
-
-
-## Architecture & Design Principles
-
-### 🧩 Key Patterns Implemented
-*   **Page Object Model (POM)**: Strict separation of selectors (in `pages/`) and assertions (in `tests/`).
-*   **Composition & Inheritance**: `Navbar` logic is inherited by `BasePage`, making navigation methods (`home.navbar.open_search()`) available universally.
-*   **DRY (Don't Repeat Yourself)**: Centralized configuration (e.g., `BASE_URL` in `BasePage`) and reusable components.
-*   **Explicit Waits**: Smart waits (`wait_for_load_state`, `wait_for_selector`) for flaky-free execution.
-
-
-## Testing Features
-
-
-### 1. 📊 Data Driven Testing (DDT)
-
-- **Implementation**: `data/test_data.json`
-- **Benefit**: Testing multiple datasets (e.g., different users, checkout flows) without implementing hardcoded values.
-
-
-### 2. 🛡️ Soft Assertions (`pytest-check`)
-
-- **Implementation**: Instead of stopping at the first failure, Product Detail Page tests verify **Price**, **Name**, and **Buttons** in a single pass.
-- **Benefit**: Maximizes defect discovery per test execution cycle.
-
-
-### 3. 🎭 Dynamic Data Generation (`Faker`)
-
-- **Implementation**: Contact Form tests use `Faker` to generate unique names and emails for every run.
-- **Benefit**: Uncovers edge cases (long strings, special characters) that static data misses.
-
-
-## Project Structure
-
-```bash
-├── pages/                  # 📍 Page Objects
-│   ├── base_page.py        #    - Parent class (Logger, Wrappers, Base URL)
-│   ├── home_page.py        #    - Home & Search logic
-│   ├── shop_page.py        #    - PLP (Product List Page) logic
-│   ├── product_page.py     #    - PDP (Detailed) logic
-│   ├── login_page.py       #    - Authentication logic
-│   └── contact_page.py     #    - Forms & Validation logic
-├── components/             # 🧩 Shared UI Components
-│   └── navbar.py           #    - Header/Nav interactions
-├── tests/                  # 🧪 Test Suite
-│   ├── conftest.py         #    - Fixtures (Setup, Teardown, Data Loading)
-│   ├── test_smoke.py       #    - Critical Health Checks
-│   ├── test_shop.py        #    - E2E Shopping Flows (Soft Assertions)
-│   ├── test_auth.py        #    - DDT Login Tests
-│   └── test_contact.py     #    - Faker Dynamic Tests
-├── data/                   # 💾 External Data
-│   └── test_data.json      #    - JSON Test Data
-└── requirements.txt        # 📦 Dependencies
+```mermaid
+flowchart LR
+    Tests[pytest scenarios and assertions] --> POM[Page objects]
+    POM --> Shared[Navbar / SearchModal / CartDrawer / CookieBanner]
+    POM --> Page[Playwright Page]
+    Shared --> Page
+    Page --> Mock[Local synthetic storefront]
+    Page --> Live[Client origin: read-only checks]
 ```
 
-## Setup & Execution
+Page objects expose domain actions and scoped locators. A small `BasePage`
+composes shared UI modules; those modules do not inherit from it. Tests own
+business assertions and use Playwright's retrying `expect` assertions. Browser
+and context lifetime belongs to pytest-playwright. There are no generic
+click/fill wrappers, fixed sleeps, custom retries or injected validation.
 
-> **DISCLAIMER:**
-> This project is a tailored QA framework designed for **PG Original** as a client deliverable.
-> *   **Authorized Use**: Verified for portfolio demonstration by the client.
-> *   **Anti-Bot Policy**: The target site `pgoriginal.com` implements strict anti-bot mechanisms. This framework handles them professionally by documenting blocks rather than bypassing them unethically. Use strictly for learning; any bad practice on the website will incur into possible IP bans.
+| Location | Responsibility |
+|---|---|
+| `pages/`, `components/` | Page/shared UI interactions and selector rationale |
+| `config/`, root `conftest.py` | Target validation, seeded data, money parsing, reporting |
+| `tests/`, `tests/framework/` | UI behavior and offline checks |
+| `data/test_data.json` | Named expected data, independent of the mock catalog |
+| `mock_site/`, `scripts/serve_mock.py` | Synthetic storefront, Python/Docker serving and readiness |
+| `.github/workflows/` | Mock gates; separate live and compatibility checks |
 
-### Prerequisites
-*   Python 3.8+
-*   `pip`
+## Coverage and boundaries
 
-### Installation
+**62 cases: 37 offline checks and 25 UI cases.** The
+[scenario map](docs/test-strategy.md) traces the original eight scenarios to the
+expanded suite.
+
+| Area | Assertions and scope |
+|---|---|
+| Navigation/search | Home/shop access; search focus/close; matching and empty results; local menu-to-product access |
+| Product discovery | Selected identity, positive current ARS price, enabled add control; local filter/reset and unavailable stock |
+| Cart — local only | Exact product/variant/quantity, line/subtotal amounts, quantity update, removal and isolated initial state |
+| Authentication | Local invalid credentials/native input cases; non-submitting reset-page navigation |
+| Contact | Seeded and explicit accented/whitespace inputs; native email validity; no submission |
+| Framework | Target isolation, data validation, server lifecycle and ARS parsing |
+
+Weekly live smoke selects three read-only cases. Eleven UI cases are eligible
+for broader live checks; eligibility does not mean they all ran live. Cart
+mutation, login rejection and unavailable stock are simulated. There are no
+real purchases, payments, account creation, reset emails or contact delivery.
+The contact challenge stays untouched; a timeout alone is not diagnosed as
+anti-bot blocking. See the [observed contract](docs/site-contract.md).
+
+## Quickstart — Windows PowerShell
+
+Install Python 3.12. Docker is optional. From a clean clone:
+
+```powershell
+git clone https://github.com/MiltonKlun/PG_Original_POM.git
+cd PG_Original_POM
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --require-hashes -r requirements.txt
+.\.venv\Scripts\python.exe -m pip check
+.\.venv\Scripts\python.exe -m playwright install chromium
+.\.venv\Scripts\python.exe -m pytest
+```
+
+During review, check out the implementation branch after cloning; `main` gains
+these commands after merge. Direct venv paths avoid a PowerShell activation
+policy change. The headless default starts/stops its own Python server on
+`http://127.0.0.1:8090`. No global packages or `.env` are required.
+
+Explicit read-only live smoke:
+
+```powershell
+$env:TARGET = 'live'
+try {
+    .\.venv\Scripts\python.exe -m pytest tests -m "smoke and live_safe" --browser chromium
+} finally {
+    Remove-Item Env:TARGET
+}
+```
+
+## Quickstart — Linux/POSIX shell
+
+Use Python 3.12 on a Playwright-supported Linux distribution. Installing browser
+system dependencies requires the platform package manager. Local Linux
+verification used a clean Debian container; hosted Ubuntu 24.04 CI also passed.
+
 ```bash
 git clone https://github.com/MiltonKlun/PG_Original_POM.git
 cd PG_Original_POM
-python -m venv venv
-# Windows
-venv\Scripts\activate
-# Mac/Linux
-source venv/bin/activate
-
-pip install -r requirements.txt
-playwright install
+python3.12 -m venv .venv
+. .venv/bin/activate
+python -m pip install --require-hashes -r requirements.txt
+python -m pip check
+python -m playwright install --with-deps chromium
+python -m pytest
+TARGET=live python -m pytest tests -m "smoke and live_safe" --browser chromium
 ```
 
-### Running Tests
-**Run All Tests:**
-```bash
-pytest tests/
+POSIX syntax also works on macOS, but macOS execution has not been verified.
+See [Playwright platform requirements](https://playwright.dev/python/docs/intro).
+
+## Optional Docker mock
+
+Build/run this foreground server in one terminal:
+
+```text
+docker build -t pgoriginal-mock mock_site
+docker run --rm -p 127.0.0.1:8090:80 pgoriginal-mock
 ```
 
-**Run Specific Features:**
-```bash
-pytest -m smoke        # Health checks
-pytest -m integration  # Shopping flows
-pytest -m auth         # Login/Register
-pytest -m contact      # Forms
+In a second terminal, use the venv Python path on Windows or an activated venv
+on Linux:
+
+```text
+python -m pytest --base-url http://127.0.0.1:8090
 ```
 
-### 📑 Reporting
-Generate professional Allure reports:
-```bash
-pytest --alluredir=reports
-allure serve reports
+Pytest verifies `/__health` and reuses the server without stopping it. Stop the
+foreground Docker command with Ctrl+C when finished. Do not also start the
+default Python-owned server on that port.
+
+## Replay, reports and compatibility
+
+These examples use an activated venv; Windows may substitute
+`.\.venv\Scripts\python.exe` for `python`.
+
+```text
+python -m pytest tests/test_cart.py --seed 1729
+python -m pytest tests/framework
+python -m black --check conftest.py config pages components tests scripts
+python -m flake8 conftest.py config pages components tests scripts
+python -m playwright install firefox webkit
+python -m pytest tests -m "not framework" --browser firefox
+python -m pytest tests -m "not framework" --browser webkit
+python -m pytest tests -m smoke --browser chromium --device "Pixel 7"
 ```
 
----
+On Linux, add `--with-deps` when installing additional browsers. Faker inputs
+derive from seed **1729** and the case ID; emails use `example.com`. Each scenario
+gets a fresh context. Mock enforcement rejects external HTTP(S) requests.
+Settings validate targets/origins; collection excludes mutation cases from live
+runs. Mobile coverage is **emulation**, not real-device testing.
 
-## 📝 License
+Executions create `reports/<run-id>/report.html`, `results.xml`, `summary.json`
+and `logs/<run-id>.log`. Failure traces, screenshots and video are retained in
+`test-results/<run-id>/`. HTML opens offline; JSON records target, seed,
+browser/device, revision and outcomes. Custom `--run-id` values are one-use to
+protect evidence. Collection-only creates no report.
 
-This project is licensed under the [MIT License](LICENSE).
+```text
+python -m playwright show-trace test-results/<run-id>/<failed-case>/trace.zip
+```
 
----
+Use the [debugging guide](docs/troubleshooting.md) before sharing evidence. Raw
+live traces can contain session/client data. See [CI maintenance](docs/ci-maintenance.md)
+for jobs, dependency updates and remaining publication checks. Staging,
+accessibility and visual regression remain explicitly scoped extensions.
 
-## Author
+## Project context and license
 
-**Milton Klun**  
-*QA Automation Engineer | AI Quality Testing*
+The original project records client permission for portfolio demonstration.
+That statement is retained as historical project context; it does not expand
+rights over client branding/assets or authorize live transactions. The local
+storefront uses synthetic content. Repository source uses the [MIT License](LICENSE).
 
-<div align="left">
-  <a href="https://www.linkedin.com/in/milton-klun/"><img src="https://img.shields.io/badge/LINKEDIN-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn"/></a><a href="mailto:miltonericklun@gmail.com"><img src="https://img.shields.io/badge/EMAIL-D14836?style=for-the-badge" alt="Email"/></a><a href="https://www.miltonklun.com"><img src="https://img.shields.io/badge/PORTFOLIO-000000?style=for-the-badge" alt="Live Site"/></a>
-</div>
+**Milton Klun — QA Automation Engineer** ·
+[LinkedIn](https://www.linkedin.com/in/milton-klun/) ·
+[Portfolio](https://www.miltonklun.com)

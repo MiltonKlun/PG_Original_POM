@@ -10,6 +10,7 @@ venv/
 env/
 .env
 .venv/
+.venv-qa/
 
 # IDE Settings
 .vscode/
@@ -25,6 +26,7 @@ allure-results/
 
 # Project Specific Artifacts
 proofs/
+test-results/
 logs/
 screenshots/
 videos/

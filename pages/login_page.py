@@ -1,26 +1,41 @@
+import re
+from playwright.sync_api import Page, expect
 from pages.base_page import BasePage
 
 
 class LoginPage(BasePage):
-    def __init__(self, page):
+    path = "/account/login/"
+
+    def open(self) -> None:
+        self._open_path(self.path)
+
+    def __init__(self, page: Page) -> None:
         super().__init__(page)
-        self.email_input = "input[name='email']"
-        self.password_input = "input[name='password']"
-        self.submit_button = "input[type='submit'], button[type='submit']"
-        self.forgot_password_link = "a[href*='/account/reset']"
-        self.error_message = ".js-login-general-error"
-        self.login_nav_link = "a[href*='login']"
+        self.form = page.locator("#login-form")
+        # Live form labels have no associated IDs; scope by native input type.
+        self.email_input = self.form.locator('input[name="email"]')
+        self.password_input = self.form.locator('input[name="password"]')
+        self.submit_button = self.form.get_by_role(
+            "button", name=re.compile("Iniciar", re.I)
+        )
+        self.forgot_password_link = self.form.get_by_role(
+            "link", name=re.compile("Olvidaste")
+        )
+        self.invalid_inputs = self.form.locator("input:invalid")
+        self.error_message = self.form.locator(".js-login-general-error")
+        self.reset_heading = page.get_by_role(
+            "heading", name=re.compile("CAMBIAR CONTRASE", re.I)
+        )
 
-    def navigate_to_login(self):
-        """Navigate to login page via header or direct URL."""
-        self.navigate(f"{self.BASE_URL}/account/login/")
+    def fill_credentials(self, email: str, password: str) -> None:
+        self.logger.info("Filling login fields (values omitted)")
+        self.email_input.fill(email)
+        self.password_input.fill(password)
 
-    def login(self, email, password):
-        self.fill(self.email_input, email)
-        self.fill(self.password_input, password)
-        self.click(self.submit_button)
-        self.page.wait_for_load_state("domcontentloaded")
+    def submit(self) -> None:
+        self.submit_button.click()
 
-    def get_error_message(self):
-        self.wait_for_element(self.error_message, timeout=20000)
-        return self.get_text(self.error_message)
+    def open_password_reset(self) -> None:
+        self.forgot_password_link.click()
+        expect(self.page).to_have_url(re.compile(r"/account/reset/?$"))
+        expect(self.reset_heading).to_be_visible()

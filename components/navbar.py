@@ -1,22 +1,26 @@
-from pages.base_page import BasePage
+from playwright.sync_api import Page, expect
 
 
-class Navbar(BasePage):
-    def __init__(self, page):
-        super().__init__(page)
-        self._search_link = "text=Buscar"
-        self._cart_link = "a:has-text('Carrito')"
+class Navbar:
+    def __init__(self, page: Page) -> None:
+        self.root = page.locator("header")
+        self.search_link = self.root.get_by_role("link", name="Buscador", exact=True)
+        # Header drawer/menu links do not have stable accessible text on mobile.
+        self.cart_link = self.root.locator('a[data-toggle="#modal-cart"]')
+        self.menu_link = self.root.locator('a[data-toggle="#nav-hamburger"]')
+        self.menu = page.locator("#nav-hamburger")
+        self.menu_shop_link = self.menu.get_by_role("link", name="SHOP", exact=True)
 
     def open_search(self) -> None:
-        self.click(self._search_link)
+        self.search_link.click()
 
     def open_cart(self) -> None:
-        self.click(self._cart_link)
+        self.cart_link.click()
 
-    def navigate_to_shop(self) -> None:
-        """Navigate to the shop page."""
-        self.navigate(f"{self.BASE_URL}/productos/")
+    def open_menu(self) -> None:
+        self.menu_link.click()
+        expect(self.menu).to_be_visible()
 
-    def navigate_to_home(self) -> None:
-        """Navigate to the home page."""
-        self.click("text=Inicio")
+    def open_shop_from_menu(self) -> None:
+        self.open_menu()
+        self.menu_shop_link.click()

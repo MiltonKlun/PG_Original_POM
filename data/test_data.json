@@ -1,19 +1,46 @@
 {
-    "auth": {
-        "invalid_user": {
-            "email": "invalid@example.com",
-            "password": "wrongpassword"
-        },
-        "valid_user": {
-            "email": "realuser@example.com",
-            "password": "realpassword123"
-        }
+  "auth": {
+    "invalid_users": [
+      {
+        "id": "unknown-account",
+        "email": "unknown@example.com",
+        "password": "invalid-qa-only"
+      },
+      {
+        "id": "wrong-password",
+        "email": "qa@example.com",
+        "password": "wrong-qa-only"
+      }
+    ]
+  },
+  "shop": {
+    "shirt": {
+      "name": "QA Remera",
+      "size": "M",
+      "color": "Negro",
+      "variant": "M / Negro",
+      "price": 2900000
     },
-    "contact": {
-        "valid_submission": {
-            "name": "Test QA",
-            "email": "testqa@example.com",
-            "message": "This is a QA Automation test message. Please ignore."
-        }
+    "cap": {
+      "name": "QA Gorra",
+      "price": 1500000
+    },
+    "unavailable": {
+      "name": "QA Agotado"
     }
+  },
+  "contact_cases": [
+    {
+      "id": "accented-name",
+      "name": "Mar\u00eda Mu\u00f1oz",
+      "email": "qa@example.com",
+      "message": "Consulta de dise\u00f1o sin enviar."
+    },
+    {
+      "id": "whitespace",
+      "name": "  QA Example  ",
+      "email": "qa@example.com",
+      "message": "  text with spaces  "
+    }
+  ]
 }
