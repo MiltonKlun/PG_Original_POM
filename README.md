@@ -1,193 +1,212 @@
-# PG Original — QA Automation Portfolio
+# PG Original - Page Object Model
 
-[![Mock CI](https://github.com/MiltonKlun/PG_Original_POM/actions/workflows/ci.yml/badge.svg)](https://github.com/MiltonKlun/PG_Original_POM/actions/workflows/ci.yml)
-[![Live read-only smoke](https://github.com/MiltonKlun/PG_Original_POM/actions/workflows/live-smoke.yml/badge.svg)](https://github.com/MiltonKlun/PG_Original_POM/actions/workflows/live-smoke.yml)
-[![Mock compatibility](https://github.com/MiltonKlun/PG_Original_POM/actions/workflows/compatibility.yml/badge.svg)](https://github.com/MiltonKlun/PG_Original_POM/actions/workflows/compatibility.yml)
+<br>
 
-Python 3.12, synchronous Playwright and pytest automation for the
-[PG Original client storefront](https://www.pgoriginal.com/). This portfolio
-demonstrates POM composition, isolated scenarios, meaningful cart assertions,
-reproducible data and failure investigation.
+<div align="center">
+  <img src="assets/pg_logo.png" alt="PG Original Logo" width="300"/>
+  <br>
+  <br>
+  <h2>Automated Testing Framework for <a href="https://www.pgoriginal.com/">pgoriginal.com</a>.</h2>
+</div>
 
-**Two targets, different evidence:** the default local simulation tests the
-automation against synthetic products and an observed UI contract. Separate
-read-only live checks validate selected client pages. Mock success does not
-certify production shopping, authentication or delivery.
 
-Hosted acceptance is verified in [PR #1](https://github.com/MiltonKlun/PG_Original_POM/pull/1):
-[mock CI](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922388895),
-[deliberate failure evidence](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922413481),
-[live smoke](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559492), and
-[compatibility](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559490).
-PR #1 is merged and `main` is protected by the three required mock CI checks.
-The badges above follow the default branch; weekly live and compatibility
-schedules are enabled. Post-merge runs are recorded in the release evidence.
-See [IMPROVEMENTS.md](IMPROVEMENTS.md), the [case study](docs/case-study.md), and
-[release evidence](docs/evidence/release-verification.json).
+<div align="center">
+  <a href="https://www.pgoriginal.com/">
+    <img src="https://img.shields.io/badge/Client-PG%20Original-000?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Website"/>
+  </a>
+  <a href="https://www.instagram.com/pgoriginalind/">
+    <img src="https://img.shields.io/badge/Instagram-@pgoriginalind-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram"/>
+  </a>
+</div>
 
-## Architecture
+---
 
-```mermaid
-flowchart LR
-    Tests[pytest scenarios and assertions] --> POM[Page objects]
-    POM --> Shared[Navbar / SearchModal / CartDrawer / CookieBanner]
-    POM --> Page[Playwright Page]
-    Shared --> Page
-    Page --> Mock[Local synthetic storefront]
-    Page --> Live[Client origin: read-only checks]
+<div align="center">
+  <a href="https://github.com/MiltonKlun/PG_Original_POM/actions/workflows/ci.yml"><img src="https://github.com/MiltonKlun/PG_Original_POM/actions/workflows/ci.yml/badge.svg" alt="Mock CI"/></a>
+  <a href="https://github.com/MiltonKlun/PG_Original_POM/actions/workflows/live-smoke.yml"><img src="https://github.com/MiltonKlun/PG_Original_POM/actions/workflows/live-smoke.yml/badge.svg" alt="Live read-only smoke"/></a>
+  <img src="https://img.shields.io/badge/Python-3.12-blue" alt="Python"/>
+  <img src="https://img.shields.io/badge/Framework-Playwright-orange" alt="Framework"/>
+</div>
+
+
+## Architecture & Design Principles
+
+### 🧩 Key Patterns Implemented
+
+*   **Page Object Model (POM)**: Selectors and domain actions live in `pages/` and `components/`; business assertions live in `tests/`.
+*   **Composition & Inheritance**: Page objects inherit a small `BasePage`, which composes shared modules such as `Navbar`, `SearchModal`, and `CartDrawer`.
+*   **DRY (Don't Repeat Yourself)**: Centralized target configuration, reusable components, and fixtures managed by pytest-playwright.
+*   **Explicit Waits**: Playwright auto-waiting and retrying `expect` assertions wait for observable UI state.
+
+## Testing Features
+
+### 1. 📊 Data Driven Testing (DDT)
+
+- **Implementation**: Named datasets in `data/test_data.json` parameterize negative login and contact-input cases.
+- **Benefit**: Cover multiple inputs while keeping expected data separate from the synthetic storefront's catalog.
+
+### 2. 🛡️ Business Assertions (Playwright)
+
+- **Implementation**: Product tests verify selected identity and current price. Cart tests verify exact product, variant, quantity, line amount, and subtotal.
+- **Benefit**: Detect incorrect shopping outcomes, including quantity updates and removal, with retained evidence when a test fails.
+
+### 3. 🎭 Dynamic Data Generation (`Faker`)
+
+- **Implementation**: Contact tests generate reproducible Spanish-language inputs from the case ID and seed (`1729` by default), using `example.com` email addresses.
+- **Benefit**: Replay generated inputs alongside explicit accented-name, whitespace, and malformed-email cases.
+
+The suite includes **62 cases: 37 offline checks and 25 UI cases**. It covers navigation, search, product details, filtering, cart behavior, and non-submitting form checks. Each UI case receives an isolated browser context.
+
+## Project Structure
+
+```text
+├── pages/                  # 📍 Page Objects
+│   ├── base_page.py        #    - Shared navigation and component composition
+│   ├── home_page.py        #    - Home navigation
+│   ├── shop_page.py        #    - Product discovery and filtering
+│   ├── product_page.py     #    - Product details and variant selection
+│   ├── login_page.py       #    - Login and reset-page controls
+│   └── contact_page.py     #    - Contact fields and native validation
+├── components/             # 🧩 Navbar, search modal, cart drawer, cookies
+├── config/                 # ⚙️ Target settings, seeded data, money, reporting
+├── tests/                  # 🧪 UI scenarios and offline framework checks
+├── data/                   # 💾 Named test inputs and expected values
+├── mock_site/              # 🛍️ Local synthetic storefront and Dockerfile
+├── scripts/                # 🛠️ Mock server and CI summaries
+├── .github/workflows/      # 🔄 Mock CI, live smoke, browser compatibility
+├── requirements.in         # 📦 Direct dependency pins
+└── requirements.txt        # 📦 Hashed dependency resolution
 ```
 
-Page objects expose domain actions and scoped locators. A small `BasePage`
-composes shared UI modules; those modules do not inherit from it. Tests own
-business assertions and use Playwright's retrying `expect` assertions. Browser
-and context lifetime belongs to pytest-playwright. There are no generic
-click/fill wrappers, fixed sleeps, custom retries or injected validation.
+## Setup & Execution
 
-| Location | Responsibility |
-|---|---|
-| `pages/`, `components/` | Page/shared UI interactions and selector rationale |
-| `config/`, root `conftest.py` | Target validation, seeded data, money parsing, reporting |
-| `tests/`, `tests/framework/` | UI behavior and offline checks |
-| `data/test_data.json` | Named expected data, independent of the mock catalog |
-| `mock_site/`, `scripts/serve_mock.py` | Synthetic storefront, Python/Docker serving and readiness |
-| `.github/workflows/` | Mock gates; separate live and compatibility checks |
+> **DISCLAIMER:**
+> This project is a tailored QA framework designed for **PG Original** as a client deliverable.
+> *   **Authorized Use**: Verified for portfolio demonstration by the client.
+> *   **Test Scope**: Default runs use a local simulation. Live checks are read-only; they do not submit credentials, contact messages, purchases, or reset emails. Challenges are not bypassed. Mock results do not certify production transactions.
 
-## Coverage and boundaries
+### Prerequisites
 
-**62 cases: 37 offline checks and 25 UI cases.** The
-[scenario map](docs/test-strategy.md) traces the original eight scenarios to the
-expanded suite.
+*   Python 3.12 and `pip`
+*   Docker (optional, for container-based mock serving)
 
-| Area | Assertions and scope |
-|---|---|
-| Navigation/search | Home/shop access; search focus/close; matching and empty results; local menu-to-product access |
-| Product discovery | Selected identity, positive current ARS price, enabled add control; local filter/reset and unavailable stock |
-| Cart — local only | Exact product/variant/quantity, line/subtotal amounts, quantity update, removal and isolated initial state |
-| Authentication | Local invalid credentials/native input cases; non-submitting reset-page navigation |
-| Contact | Seeded and explicit accented/whitespace inputs; native email validity; no submission |
-| Framework | Target isolation, data validation, server lifecycle and ARS parsing |
+### Installation
 
-Weekly live smoke selects three read-only cases. Eleven UI cases are eligible
-for broader live checks; eligibility does not mean they all ran live. Cart
-mutation, login rejection and unavailable stock are simulated. There are no
-real purchases, payments, account creation, reset emails or contact delivery.
-The contact challenge stays untouched; a timeout alone is not diagnosed as
-anti-bot blocking. See the [observed contract](docs/site-contract.md).
-
-## Quickstart — Windows PowerShell
-
-Install Python 3.12. Docker is optional. From a clean clone:
-
-```powershell
+```bash
 git clone https://github.com/MiltonKlun/PG_Original_POM.git
 cd PG_Original_POM
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --require-hashes -r requirements.txt
-.\.venv\Scripts\python.exe -m pip check
-.\.venv\Scripts\python.exe -m playwright install chromium
-.\.venv\Scripts\python.exe -m pytest
+python -m venv venv
 ```
 
-The quickstarts are available on `main`. Direct venv paths avoid a PowerShell activation
-policy change. The headless default starts/stops its own Python server on
-`http://127.0.0.1:8090`. No global packages or `.env` are required.
-
-Explicit read-only live smoke:
+Activate the environment:
 
 ```powershell
-$env:TARGET = 'live'
+# Windows PowerShell
+.\venv\Scripts\Activate.ps1
+```
+
+```bash
+# Linux / macOS shell
+source venv/bin/activate
+```
+
+Install the pinned dependencies and browser:
+
+```bash
+python -m pip install --require-hashes -r requirements.txt
+python -m pip check
+python -m playwright install chromium
+```
+
+On Linux, use `python -m playwright install --with-deps chromium` for the last command to include required system libraries.
+
+On Windows, commands can also use `venv\Scripts\python.exe` directly without activating the environment. Windows and Ubuntu execution are verified; macOS has not been verified.
+
+### Running Tests
+
+**Run All Tests:**
+
+```bash
+python -m pytest tests/
+```
+
+The default headless run starts and stops its own local mock server at `http://127.0.0.1:8090` and rejects external HTTP(S) requests.
+
+**Run Specific Features:**
+
+```bash
+python -m pytest -m smoke        # Navigation, search, product smoke
+python -m pytest -m shop         # Shopping and cart flows
+python -m pytest -m auth         # Local negative login and reset navigation
+python -m pytest -m contact      # Non-submitting form checks
+python -m pytest tests/framework # Offline framework checks
+python -m pytest --seed 1729     # Reproduce generated inputs
+```
+
+**Read-Only Live Smoke:**
+
+```powershell
+# Windows PowerShell
+$env:TARGET = "live"
 try {
-    .\.venv\Scripts\python.exe -m pytest tests -m "smoke and live_safe" --browser chromium
+    python -m pytest tests -m "smoke and live_safe" --browser chromium
 } finally {
     Remove-Item Env:TARGET
 }
 ```
 
-## Quickstart — Linux/POSIX shell
-
-Use Python 3.12 on a Playwright-supported Linux distribution. Installing browser
-system dependencies requires the platform package manager. Local Linux
-verification used a clean Debian container; hosted Ubuntu 24.04 CI also passed.
-
 ```bash
-git clone https://github.com/MiltonKlun/PG_Original_POM.git
-cd PG_Original_POM
-python3.12 -m venv .venv
-. .venv/bin/activate
-python -m pip install --require-hashes -r requirements.txt
-python -m pip check
-python -m playwright install --with-deps chromium
-python -m pytest
+# Linux / macOS shell
 TARGET=live python -m pytest tests -m "smoke and live_safe" --browser chromium
 ```
 
-POSIX syntax also works on macOS, but macOS execution has not been verified.
-See [Playwright platform requirements](https://playwright.dev/python/docs/intro).
+This selects three read-only checks for home/shop access, search controls, and product details. Cart mutations and invalid-login submissions stay local.
 
-## Optional Docker mock
+**Optional Docker Mock:**
 
-Build/run this foreground server in one terminal:
-
-```text
+```bash
 docker build -t pgoriginal-mock mock_site
 docker run --rm -p 127.0.0.1:8090:80 pgoriginal-mock
 ```
 
-In a second terminal, use the venv Python path on Windows or an activated venv
-on Linux:
+In another terminal with the Python environment active, run `python -m pytest --base-url http://127.0.0.1:8090`. Pytest verifies and reuses the server; stop the foreground Docker command with Ctrl+C when finished.
 
-```text
-python -m pytest --base-url http://127.0.0.1:8090
-```
+**Browser Compatibility:**
 
-Pytest verifies `/__health` and reuses the server without stopping it. Stop the
-foreground Docker command with Ctrl+C when finished. Do not also start the
-default Python-owned server on that port.
-
-## Replay, reports and compatibility
-
-These examples use an activated venv; Windows may substitute
-`.\.venv\Scripts\python.exe` for `python`.
-
-```text
-python -m pytest tests/test_cart.py --seed 1729
-python -m pytest tests/framework
-python -m black --check conftest.py config pages components tests scripts
-python -m flake8 conftest.py config pages components tests scripts
+```bash
 python -m playwright install firefox webkit
 python -m pytest tests -m "not framework" --browser firefox
 python -m pytest tests -m "not framework" --browser webkit
 python -m pytest tests -m smoke --browser chromium --device "Pixel 7"
 ```
 
-On Linux, add `--with-deps` when installing additional browsers. Faker inputs
-derive from seed **1729** and the case ID; emails use `example.com`. Each scenario
-gets a fresh context. Mock enforcement rejects external HTTP(S) requests.
-Settings validate targets/origins; collection excludes mutation cases from live
-runs. Mobile coverage is **emulation**, not real-device testing.
+On Linux, add `--with-deps` when installing browsers. Pixel 7 coverage is mobile emulation. CI runs mock checks on pull requests; live smoke and compatibility also have manual and weekly workflows.
 
-Executions create `reports/<run-id>/report.html`, `results.xml`, `summary.json`
-and `logs/<run-id>.log`. Failure traces, screenshots and video are retained in
-`test-results/<run-id>/`. HTML opens offline; JSON records target, seed,
-browser/device, revision and outcomes. Custom `--run-id` values are one-use to
-protect evidence. Collection-only creates no report.
+### 📑 Reporting
 
-```text
+Each run creates a standalone HTML report, JUnit XML, and JSON summary under `reports/<run-id>/`. Open `report.html` directly in a browser. Reports identify the target, browser, seed, revision, and actual outcomes.
+
+Failed cases retain traces, screenshots, and video under `test-results/<run-id>/`; runtime logs are in `logs/`. Review live evidence before sharing because it may contain session or client data.
+
+```bash
 python -m playwright show-trace test-results/<run-id>/<failed-case>/trace.zip
 ```
 
-Use the [debugging guide](docs/troubleshooting.md) before sharing evidence. Raw
-live traces can contain session/client data. See [CI maintenance](docs/ci-maintenance.md)
-for jobs, dependency updates and remaining publication checks. Staging,
-accessibility and visual regression remain explicitly scoped extensions.
+Use `--headed` to watch a local test or `--run-id <unique-name>` to name its reports. Custom run IDs are one-use; choose a new name for each run.
 
-## Project context and license
+---
 
-The original project records client permission for portfolio demonstration.
-That statement is retained as historical project context; it does not expand
-rights over client branding/assets or authorize live transactions. The local
-storefront uses synthetic content. Repository source uses the [MIT License](LICENSE).
+## 📝 License
 
-**Milton Klun — QA Automation Engineer** ·
-[LinkedIn](https://www.linkedin.com/in/milton-klun/) ·
-[Portfolio](https://www.miltonklun.com)
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+## Author
+
+**Milton Klun**  
+*QA Automation Engineer | AI Quality Testing*
+
+<div align="left">
+  <a href="https://www.linkedin.com/in/milton-klun/"><img src="https://img.shields.io/badge/LINKEDIN-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn"/></a><a href="mailto:miltonericklun@gmail.com"><img src="https://img.shields.io/badge/EMAIL-D14836?style=for-the-badge" alt="Email"/></a><a href="https://www.miltonklun.com"><img src="https://img.shields.io/badge/PORTFOLIO-000000?style=for-the-badge" alt="Live Site"/></a>
+</div>

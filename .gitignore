@@ -33,3 +33,10 @@ videos/
 
 # Logs
 *.log
+
+# Local planning, agent instructions, and implementation records
+/CLAUDE.md
+/AGENTS.md
+/IMPROVEMENTS.md
+/01-PG-ORIGINAL-POM.md
+/docs/

@@ -12,6 +12,6 @@ Commands, actual totals, browser/device, seed and revision; link CI and reviewed
 artifacts. Describe unresolved failures and limitations. Do not attach unreviewed
 live traces or personal/session data.
 
-## Handoff
+## Documentation
 
-Update IMPROVEMENTS.md and relevant contracts. Identify the next incomplete task.
+Update the README or mock behavior contract when setup or expected behavior changes.
