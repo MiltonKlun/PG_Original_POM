@@ -20,7 +20,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, windows-latest]
+        include:
+          - os: ubuntu-24.04
+            report-id: quality-ubuntu
+          - os: windows-latest
+            report-id: quality-windows
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     env:
@@ -36,10 +40,10 @@ jobs:
       - run: python -m pip check
       - run: python -m black --check conftest.py config pages components tests scripts
       - run: python -m flake8 conftest.py config pages components tests scripts
-      - run: python -m pytest tests/framework --run-id quality-${{ matrix.os }}
+      - run: python -m pytest tests/framework --run-id ${{ matrix.report-id }}
       - name: Summarize results
         if: always()
-        run: python scripts/ci_summary.py reports/quality-${{ matrix.os }}/summary.json
+        run: python scripts/ci_summary.py reports/${{ matrix.report-id }}/summary.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
