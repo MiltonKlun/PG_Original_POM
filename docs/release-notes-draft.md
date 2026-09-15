@@ -1,7 +1,8 @@
 # Release notes draft — portfolio modernization
 
-Version/tag: not assigned. Publication: pending owner request and remote CI
-acceptance. Implementation code baseline for final local validation: `68a09f4`.
+Version/tag: not assigned. Hosted acceptance passed; final merge and main branch
+protection await the owner. Python/mock baseline for local validation: `68a09f4`;
+hosted acceptance includes CI report-ID fix `8b80f72`.
 
 ## Changes
 
@@ -32,11 +33,11 @@ checkout totals and [the case study](case-study.md) for failure investigations.
 No skipped/retried local cases are accepted. Mock failures do not certify client
 behavior. No checkout, payment, account creation or message delivery was tested.
 
-Before publication, complete Tasks 7.1/7.2: passing and deliberate-failure PR
-runs, artifact inspection on the exact SHA, and the required repository checks
-described in [ci-maintenance.md](ci-maintenance.md). Do not advertise the core
-milestone as met until those gates pass. Live schedules and badges become active
-only when the workflows are published.
+Tasks 7.1-7.3 now have hosted passing/failing evidence, inspected artifacts and
+live/compatibility outcomes. The remaining owner decision is merging PR #1 and
+applying/verifying the prepared main-branch protection described in
+[ci-maintenance.md](ci-maintenance.md). Default-branch schedules and badges become
+active after merge; no new release or tag has been published.
 
 Suggested About text:
 

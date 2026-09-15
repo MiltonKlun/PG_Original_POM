@@ -12,10 +12,10 @@ checklist. Follow [README.md](README.md) for setup and architecture,
 [site contract](docs/site-contract.md) for observed versus simulated behavior,
 and [troubleshooting](docs/troubleshooting.md) for evidence handling.
 
-The next incomplete gate is remote CI acceptance (Tasks 7.1/7.2). See
-[CI maintenance](docs/ci-maintenance.md) for the concrete publication sequence
-and required check names. Do not mark remote runs/settings verified from local
-passes. Keep live actions within the plan's agreed read-only scope.
+Hosted CI acceptance is recorded in the plan and release evidence. The remaining
+publication gate is owner-approved merge of PR #1 and application/verification
+of the prepared main-branch protection. See [CI maintenance](docs/ci-maintenance.md)
+for exact steps and check names. Keep live actions within the agreed read-only scope.
 
 ## Agent skills
 

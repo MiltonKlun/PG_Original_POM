@@ -74,8 +74,18 @@ authentication. The live selector regression demonstrates why the separate live
 contract checks matter. A client staging integration is the next substantive
 extension when resettable data and authorized actions are available.
 
-The workflows prepare Windows/Ubuntu quality checks, Docker-served Chromium
-mock UI, separate weekly live smoke and bounded compatibility checks. Remote
-passing/failing PR artifacts and branch protection still require publication
-acceptance. This is a locally validated candidate, not a claim of an already
-green release pipeline. See [CI maintenance](ci-maintenance.md).
+Hosted acceptance on 2026-09-15 UTC (September 14 in Buenos Aires) verified
+Windows/Ubuntu quality checks, Docker-served Chromium mock UI, live smoke and
+browser compatibility. The first hosted run exposed a workflow defect: an Ubuntu
+version string containing dots was passed as a restricted report ID. Separating
+matrix runner names from report IDs fixed it in `8b80f72`.
+
+A temporary draft PR increased the synthetic shirt's expected price by one cent.
+Exactly two cart assertions failed and the job remained failed, while HTML,
+JUnit/JSON, two traces, screenshots, videos and server logs were retained.
+Downloaded reports agreed and rendered offline. Restoring the price returned
+CI to green. Optional workflows ran with temporary PR triggers because GitHub
+requires manual workflows on the default branch before dispatch; those triggers
+were removed and never merged. Full run links and artifact expiration dates are
+in the release evidence. Main-branch merge/protection remain the final owner
+decision; see [CI maintenance](ci-maintenance.md).

@@ -1,8 +1,10 @@
 # CI and maintenance handoff
 
-The workflows are prepared for `MiltonKlun/PG_Original_POM`. Local validation
-does not demonstrate GitHub runner behavior, artifact permissions, or branch
-protection. The publication checks below remain pending until a remote run exists.
+Hosted workflows are verified for `MiltonKlun/PG_Original_POM`; run links and
+downloaded-artifact inspections are recorded in
+[release evidence](evidence/release-verification.json). PR #1 is the implementation;
+PR #2 was an isolated, restored acceptance experiment. Main-branch merge and
+protection remain pending owner approval.
 
 ## Jobs and scope
 
@@ -24,7 +26,11 @@ portfolio evidence until reviewed.
 Missing or invalid evidence exits nonzero. Summarizing a failed run does not
 override the failed pytest step. No workflow uses `continue-on-error`.
 
-## Publication acceptance (owner/releasing agent)
+## Publication acceptance procedure
+
+Steps 1-4 have hosted evidence. Steps 5-6 are the remaining owner-controlled
+publication work. Recheck the latest PR #1 checks before merging; run records
+identify both the source head SHA and the generated PR merge revision tested.
 
 1. Publish the reviewed implementation branch and open a PR to `main` when
    requested. Observe `Mock CI` on the exact pushed SHA; record its run URL in
@@ -39,14 +45,41 @@ override the failed pytest step. No workflow uses `continue-on-error`.
    selections and actual outcomes. A live timeout is unresolved evidence until
    investigated, not proof of an application defect. Schedules run from the
    default branch after merge and may be delayed by GitHub.
+   Before the new workflows existed on main, acceptance used temporary
+   `pull_request` triggers on PR #2 with identical runtime steps. Both workflows
+   passed, and the temporary triggers were reverted. First default-branch
+   dispatch/scheduled execution remains a post-merge check.
 5. In the repository's main-branch ruleset/protection settings, require PRs and
    the exact check names `Quality (ubuntu-24.04)`, `Quality (windows-latest)`, and
    `Mock UI (Chromium)`. Select names from a real run, require an up-to-date
    branch, and enforce the rule for normal contributors. Do not require the
    live job. Confirm a failing mock PR cannot merge under the configured rule.
-6. Only after those checks, close the remaining Phase 7 gates and core milestone.
-   Repository settings, remote runs, tags and releases have not been applied by
-   creating these local files.
+6. After approval, mark PR #1 ready, merge the reviewed SHA with passing required
+   checks, and verify main's Mock CI. Dispatch live/compatibility from main and
+   check their actual outcomes. Close the core milestone only after the branch
+   rule is verified. No tag or release is implied by this step.
+
+### Prepared branch protection
+
+[`branch-protection.json`](branch-protection.json) is the concrete proposed API
+payload. It requires the three verified GitHub Actions checks (observed app ID
+15368), an up-to-date PR branch, resolved conversations and no force pushes or
+deletions, including for administrators. It sets zero mandatory human approvals
+for this single-owner portfolio, while still requiring a PR and green checks.
+It does not require the external live workflow. Main was observed unprotected;
+re-read existing settings before applying so later owner changes are preserved.
+
+Once authorized, from the repository root:
+
+```text
+gh api --method PUT repos/MiltonKlun/PG_Original_POM/branches/main/protection --input docs/branch-protection.json
+gh api repos/MiltonKlun/PG_Original_POM/branches/main/protection
+```
+
+Inspect the response and PR merge requirements; do not deliberately merge a
+failing change to test the rule. The payload is prepared, not already applied.
+See [GitHub branch protection API](https://docs.github.com/en/rest/branches/branch-protection#update-branch-protection)
+and [manual dispatch requirements](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow).
 
 ## Dependency updates
 

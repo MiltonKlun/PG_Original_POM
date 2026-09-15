@@ -14,10 +14,14 @@ automation against synthetic products and an observed UI contract. Separate
 read-only live checks validate selected client pages. Mock success does not
 certify production shopping, authentication or delivery.
 
-Badges reflect GitHub runs once these workflow files are published. Local
-implementation and evidence are recorded in [IMPROVEMENTS.md](IMPROVEMENTS.md);
-remote CI acceptance and branch protection remain pending. See the
-[case study](docs/case-study.md) and
+Hosted acceptance is verified in [PR #1](https://github.com/MiltonKlun/PG_Original_POM/pull/1):
+[mock CI](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922388895),
+[deliberate failure evidence](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922413481),
+[live smoke](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559492), and
+[compatibility](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559490).
+The badges above follow the default branch; its new workflow status and schedules
+become active after merge. Final merge and branch protection remain pending.
+See [IMPROVEMENTS.md](IMPROVEMENTS.md), the [case study](docs/case-study.md), and
 [release evidence](docs/evidence/release-verification.json).
 
 ## Architecture
@@ -103,7 +107,7 @@ try {
 
 Use Python 3.12 on a Playwright-supported Linux distribution. Installing browser
 system dependencies requires the platform package manager. Local Linux
-verification used a clean Debian container; hosted Ubuntu CI is a separate gate.
+verification used a clean Debian container; hosted Ubuntu 24.04 CI also passed.
 
 ```bash
 git clone https://github.com/MiltonKlun/PG_Original_POM.git

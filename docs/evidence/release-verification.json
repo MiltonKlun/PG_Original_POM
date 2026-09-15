@@ -1,8 +1,8 @@
 {
   "date": "2026-09-14",
   "validated_code_revision": "68a09f442672f3a5cdbff6a46c277e90627ed429",
-  "status": "locally validated candidate; hosted CI acceptance and repository rules pending publication",
-  "source_note": "Final handoff commits change documentation/templates only; executable code and pins match validated_code_revision.",
+  "status": "hosted CI, failure artifacts, recovery, live and compatibility verified; final merge and branch protection pending",
+  "source_note": "Executable Python/mock code and pins match validated_code_revision. Hosted acceptance fixed CI matrix report IDs in 8b80f72. Subsequent candidate updates document evidence and proposed branch protection.",
   "python": {
     "windows": "3.12.4",
     "linux": "3.12.14"
@@ -31,18 +31,777 @@
     "correction": "Passed the device as one direct Docker argument; corrected result is release-linux-mobile",
     "automatic_retries": 0
   },
-  "remote_runs": [],
+  "remote_runs": [
+    {
+      "run_id": 34922276534,
+      "purpose": "initial CI integration failure",
+      "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922276534",
+      "head_sha": "d780192be62d237878018e93079e8e5a6c81f40c",
+      "head_branch": "improve/phase-8-portfolio",
+      "event": "pull_request",
+      "conclusion": "failure",
+      "created_at": "2026-09-15T02:43:36Z",
+      "jobs": [
+        {
+          "name": "Mock UI (Chromium)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922276534/job/104232825466",
+          "post_test_steps": [
+            {
+              "name": "Summarize results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Collect server logs and stop owned container",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "Quality (windows-latest)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922276534/job/104232825537",
+          "post_test_steps": [
+            {
+              "name": "Summarize results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "Quality (ubuntu-24.04)",
+          "conclusion": "failure",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922276534/job/104232825801",
+          "post_test_steps": [
+            {
+              "name": "Summarize results",
+              "conclusion": "failure"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "conclusion": "failure"
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 10378393528,
+          "name": "mock-chromium-1",
+          "expires_at": "2026-09-29T02:44:51Z",
+          "expired": false
+        },
+        {
+          "id": 10378138106,
+          "name": "quality-windows-latest-1",
+          "expires_at": "2026-09-29T02:44:35Z",
+          "expired": false
+        }
+      ],
+      "diagnosis": "Ubuntu matrix OS name contained dots; --run-id rejected it before tests. Fixed by separate valid report IDs in 8b80f72."
+    },
+    {
+      "run_id": 34922388895,
+      "purpose": "corrected portfolio CI",
+      "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922388895",
+      "head_sha": "8b80f72dc232bc1aa1584c69cdedb2ed1e698a7e",
+      "head_branch": "improve/phase-8-portfolio",
+      "event": "pull_request",
+      "conclusion": "success",
+      "created_at": "2026-09-15T02:45:21Z",
+      "jobs": [
+        {
+          "name": "Quality (ubuntu-24.04)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922388895/job/104233160597",
+          "post_test_steps": [
+            {
+              "name": "Summarize results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "Mock UI (Chromium)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922388895/job/104233160759",
+          "post_test_steps": [
+            {
+              "name": "Summarize results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Collect server logs and stop owned container",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "Quality (windows-latest)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922388895/job/104233160772",
+          "post_test_steps": [
+            {
+              "name": "Summarize results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 10378981346,
+          "name": "quality-ubuntu-24.04-1",
+          "expires_at": "2026-09-29T02:45:40Z",
+          "expired": false
+        },
+        {
+          "id": 10378502968,
+          "name": "quality-windows-latest-1",
+          "expires_at": "2026-09-29T02:46:02Z",
+          "expired": false
+        },
+        {
+          "id": 10378128103,
+          "name": "mock-chromium-1",
+          "expires_at": "2026-09-29T02:46:39Z",
+          "expired": false
+        }
+      ],
+      "inspection": {
+        "reports": [
+          {
+            "run_id": "mock-chromium",
+            "target": "mock",
+            "browser": [
+              "chromium"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "125998e9251731fefcba6d582a4b56fe6341a8c9",
+            "counts": {
+              "passed": 25,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 37,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 14.527
+          },
+          {
+            "run_id": "quality-ubuntu",
+            "target": "mock",
+            "browser": [
+              "chromium"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "125998e9251731fefcba6d582a4b56fe6341a8c9",
+            "counts": {
+              "passed": 37,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 0,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 2.668
+          },
+          {
+            "run_id": "quality-windows",
+            "target": "mock",
+            "browser": [
+              "chromium"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "125998e9251731fefcba6d582a4b56fe6341a8c9",
+            "counts": {
+              "passed": 37,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 0,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 3.344
+          }
+        ],
+        "valid_traces": 0,
+        "screenshots": 0,
+        "videos": 0,
+        "server_logs": 1
+      }
+    },
+    {
+      "run_id": 34922413481,
+      "purpose": "deliberate one-cent mismatch",
+      "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922413481",
+      "head_sha": "873f65cdc771b5c0a0a8c736f6f6851c82f5a2c3",
+      "head_branch": "improve/ci-failure-evidence",
+      "event": "pull_request",
+      "conclusion": "failure",
+      "created_at": "2026-09-15T02:45:45Z",
+      "jobs": [
+        {
+          "name": "Mock UI (Chromium)",
+          "conclusion": "failure",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922413481/job/104233233923",
+          "post_test_steps": [
+            {
+              "name": "Summarize results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Collect server logs and stop owned container",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "Quality (windows-latest)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922413481/job/104233234103",
+          "post_test_steps": [
+            {
+              "name": "Summarize results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "Quality (ubuntu-24.04)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922413481/job/104233234136",
+          "post_test_steps": [
+            {
+              "name": "Summarize results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 10378702319,
+          "name": "quality-windows-latest-1",
+          "expires_at": "2026-09-29T02:46:39Z",
+          "expired": false
+        },
+        {
+          "id": 10378332648,
+          "name": "mock-chromium-1",
+          "expires_at": "2026-09-29T02:46:41Z",
+          "expired": false
+        },
+        {
+          "id": 10377988471,
+          "name": "quality-ubuntu-24.04-1",
+          "expires_at": "2026-09-29T02:46:07Z",
+          "expired": false
+        }
+      ],
+      "inspection": {
+        "reports": [
+          {
+            "run_id": "mock-chromium",
+            "target": "mock",
+            "browser": [
+              "chromium"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "d981933ebb0894ecdc57174908ff08a41335f2ae",
+            "counts": {
+              "passed": 23,
+              "failed": 2,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 37,
+            "collection_errors": 0,
+            "exit_code": 1,
+            "duration_seconds": 12.374
+          },
+          {
+            "run_id": "quality-ubuntu",
+            "target": "mock",
+            "browser": [
+              "chromium"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "d981933ebb0894ecdc57174908ff08a41335f2ae",
+            "counts": {
+              "passed": 37,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 0,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 2.689
+          },
+          {
+            "run_id": "quality-windows",
+            "target": "mock",
+            "browser": [
+              "chromium"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "d981933ebb0894ecdc57174908ff08a41335f2ae",
+            "counts": {
+              "passed": 37,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 0,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 4.593
+          }
+        ],
+        "valid_traces": 2,
+        "screenshots": 2,
+        "videos": 2,
+        "server_logs": 1
+      },
+      "diagnosis": "Exactly two cart assertions fail for expected 2900001 vs actual 2900000 minor units. Both HTML reports rendered offline without JS errors; traces ZIP-verified, screenshot reviewed. Test exit remains 1."
+    },
+    {
+      "run_id": 34922559438,
+      "purpose": "recovery after restoring expectation",
+      "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559438",
+      "head_sha": "e307197b84ccd6b0a5bcfca01cd4aabd7367194d",
+      "head_branch": "improve/ci-failure-evidence",
+      "event": "pull_request",
+      "conclusion": "success",
+      "created_at": "2026-09-15T02:48:07Z",
+      "jobs": [
+        {
+          "name": "Mock UI (Chromium)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559438/job/104233676695",
+          "post_test_steps": [
+            {
+              "name": "Summarize results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Collect server logs and stop owned container",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "Quality (windows-latest)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559438/job/104233676877",
+          "post_test_steps": [
+            {
+              "name": "Summarize results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "Quality (ubuntu-24.04)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559438/job/104233676902",
+          "post_test_steps": [
+            {
+              "name": "Summarize results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 10378692405,
+          "name": "quality-ubuntu-24.04-1",
+          "expires_at": "2026-09-29T02:48:26Z",
+          "expired": false
+        },
+        {
+          "id": 10378543028,
+          "name": "quality-windows-latest-1",
+          "expires_at": "2026-09-29T02:49:17Z",
+          "expired": false
+        },
+        {
+          "id": 10377968956,
+          "name": "mock-chromium-1",
+          "expires_at": "2026-09-29T02:49:24Z",
+          "expired": false
+        }
+      ],
+      "inspection": {
+        "reports": [
+          {
+            "run_id": "mock-chromium",
+            "target": "mock",
+            "browser": [
+              "chromium"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "27ba7463424086bf5f4d9aa863cb88ef207fcba3",
+            "counts": {
+              "passed": 25,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 37,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 9.995
+          },
+          {
+            "run_id": "quality-ubuntu",
+            "target": "mock",
+            "browser": [
+              "chromium"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "27ba7463424086bf5f4d9aa863cb88ef207fcba3",
+            "counts": {
+              "passed": 37,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 0,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 2.671
+          },
+          {
+            "run_id": "quality-windows",
+            "target": "mock",
+            "browser": [
+              "chromium"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "27ba7463424086bf5f4d9aa863cb88ef207fcba3",
+            "counts": {
+              "passed": 37,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 0,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 3.547
+          }
+        ],
+        "valid_traces": 0,
+        "screenshots": 0,
+        "videos": 0,
+        "server_logs": 1
+      }
+    },
+    {
+      "run_id": 34922559490,
+      "purpose": "hosted browser compatibility",
+      "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559490",
+      "head_sha": "e307197b84ccd6b0a5bcfca01cd4aabd7367194d",
+      "head_branch": "improve/ci-failure-evidence",
+      "event": "pull_request",
+      "conclusion": "success",
+      "created_at": "2026-09-15T02:48:07Z",
+      "jobs": [
+        {
+          "name": "Mock compatibility (firefox)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559490/job/104233676465",
+          "post_test_steps": [
+            {
+              "name": "Summarize results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "Mock compatibility (chromium)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559490/job/104233676468",
+          "post_test_steps": [
+            {
+              "name": "Summarize results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "name": "Mock compatibility (webkit)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559490/job/104233676490",
+          "post_test_steps": [
+            {
+              "name": "Summarize results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 10378857202,
+          "name": "mock-compat-webkit-1",
+          "expires_at": "2026-09-29T02:49:30Z",
+          "expired": false
+        },
+        {
+          "id": 10378681609,
+          "name": "mock-compat-chromium-1",
+          "expires_at": "2026-09-29T02:48:45Z",
+          "expired": false
+        },
+        {
+          "id": 10378263091,
+          "name": "mock-compat-firefox-1",
+          "expires_at": "2026-09-29T02:49:07Z",
+          "expired": false
+        }
+      ],
+      "inspection": {
+        "reports": [
+          {
+            "run_id": "compat-chromium",
+            "target": "mock",
+            "browser": [
+              "chromium"
+            ],
+            "device": "Pixel 7",
+            "seed": 1729,
+            "revision": "27ba7463424086bf5f4d9aa863cb88ef207fcba3",
+            "counts": {
+              "passed": 4,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 58,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 2.996
+          },
+          {
+            "run_id": "compat-firefox",
+            "target": "mock",
+            "browser": [
+              "firefox"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "27ba7463424086bf5f4d9aa863cb88ef207fcba3",
+            "counts": {
+              "passed": 25,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 37,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 25.312
+          },
+          {
+            "run_id": "compat-webkit",
+            "target": "mock",
+            "browser": [
+              "webkit"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "27ba7463424086bf5f4d9aa863cb88ef207fcba3",
+            "counts": {
+              "passed": 25,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 37,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 20.637
+          }
+        ],
+        "valid_traces": 0,
+        "screenshots": 0,
+        "videos": 0,
+        "server_logs": 0
+      },
+      "trigger_note": "Temporary PR trigger on acceptance branch; runtime steps match the portfolio workflows. Trigger and deliberate fixture change restored afterward; never merged."
+    },
+    {
+      "run_id": 34922559492,
+      "purpose": "hosted read-only live smoke",
+      "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559492",
+      "head_sha": "e307197b84ccd6b0a5bcfca01cd4aabd7367194d",
+      "head_branch": "improve/ci-failure-evidence",
+      "event": "pull_request",
+      "conclusion": "success",
+      "created_at": "2026-09-15T02:48:07Z",
+      "jobs": [
+        {
+          "name": "Live smoke (Chromium, non-required)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559492/job/104233676508",
+          "post_test_steps": [
+            {
+              "name": "Summarize results",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 10377983806,
+          "name": "live-chromium-1",
+          "expires_at": "2026-09-29T02:48:56Z",
+          "expired": false
+        }
+      ],
+      "inspection": {
+        "reports": [
+          {
+            "run_id": "live-chromium",
+            "target": "live",
+            "browser": [
+              "chromium"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "27ba7463424086bf5f4d9aa863cb88ef207fcba3",
+            "counts": {
+              "passed": 3,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 59,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 14.048
+          }
+        ],
+        "valid_traces": 0,
+        "screenshots": 0,
+        "videos": 0,
+        "server_logs": 0
+      },
+      "trigger_note": "Temporary PR trigger on acceptance branch; runtime steps match the portfolio workflows. Trigger and deliberate fixture change restored afterward; never merged."
+    }
+  ],
   "remaining_gates": [
-    "Passing and deliberate-failure remote PR runs on published SHA",
-    "Inspect uploaded passing/failing artifacts and check names",
-    "Apply and verify main branch protection",
-    "Verify published live/compatibility workflow outcomes"
+    "Owner approval for final merge and main branch protection",
+    "Apply and verify required checks; verify post-merge default-branch workflows"
   ],
   "limitations": [
     "No real transactions, account creation or message delivery",
     "Cart/auth rejection and unavailable stock simulated",
     "Mobile is emulation, not a physical device",
-    "Hosted Ubuntu and macOS not locally verified",
+    "Hosted Ubuntu now verified; macOS remains unverified",
     "Raw live traces not included in this sanitized evidence"
   ],
   "runs": [
@@ -384,5 +1143,11 @@
       "junit_counts_verified": true,
       "scope": "read-only client browsing"
     }
-  ]
+  ],
+  "hosted_verification_date_utc": "2026-09-15",
+  "pull_request": "https://github.com/MiltonKlun/PG_Original_POM/pull/1",
+  "temporary_experiment_pr": "https://github.com/MiltonKlun/PG_Original_POM/pull/2",
+  "revision_note": "PR run head_sha identifies the source branch. Report revision identifies the GitHub-generated merge commit tested against main; these intentionally differ.",
+  "latest_checks": "The current PR #1 required checks are authoritative for later documentation-only commits; see the PR URL.",
+  "temporary_experiment_status": "Price and temporary PR triggers reverted; PR #2 closed without merge."
 }
