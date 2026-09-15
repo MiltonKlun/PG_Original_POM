@@ -1,7 +1,8 @@
 # Local storefront behavior contract
 
 This is a synthetic QA simulation, not a deployed copy of PG Original or client
-staging. Source observations: [site contract](../docs/site-contract.md).
+staging. Page objects reflect observed public markup; the local behaviors below
+define the synthetic test environment.
 No external assets, analytics, authentication, email or payment services exist.
 
 | Route | Requirement and expected transition | POM/scenario |
