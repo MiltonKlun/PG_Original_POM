@@ -1,7 +1,6 @@
 {
   "required_status_checks": {
     "strict": true,
-    "contexts": [],
     "checks": [
       {"context": "Quality (ubuntu-24.04)", "app_id": 15368},
       {"context": "Quality (windows-latest)", "app_id": 15368},

@@ -87,5 +87,9 @@ Downloaded reports agreed and rendered offline. Restoring the price returned
 CI to green. Optional workflows ran with temporary PR triggers because GitHub
 requires manual workflows on the default branch before dispatch; those triggers
 were removed and never merged. Full run links and artifact expiration dates are
-in the release evidence. Main-branch merge/protection remain the final owner
-decision; see [CI maintenance](ci-maintenance.md).
+in the release evidence. After owner approval, PR #1 merged as `038bab1`, the
+three required mock checks were enforced on main (including administrators),
+and default-branch workflows were verified. The branch-protection API rejected
+the simultaneous legacy `contexts` and newer `checks` fields; removing the unused
+legacy field preserved the intended rules and the accepted payload is committed.
+See [CI maintenance](ci-maintenance.md) for ongoing maintenance.

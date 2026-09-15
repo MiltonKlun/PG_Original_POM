@@ -1,7 +1,7 @@
 {
   "date": "2026-09-14",
   "validated_code_revision": "68a09f442672f3a5cdbff6a46c277e90627ed429",
-  "status": "hosted CI, failure artifacts, recovery, live and compatibility verified; final merge and branch protection pending",
+  "status": "core milestone complete; implementation merged, main protected, post-merge workflows passed",
   "source_note": "Executable Python/mock code and pins match validated_code_revision. Hosted acceptance fixed CI matrix report IDs in 8b80f72. Subsequent candidate updates document evidence and proposed branch protection.",
   "python": {
     "windows": "3.12.4",
@@ -793,10 +793,7 @@
       "trigger_note": "Temporary PR trigger on acceptance branch; runtime steps match the portfolio workflows. Trigger and deliberate fixture change restored afterward; never merged."
     }
   ],
-  "remaining_gates": [
-    "Owner approval for final merge and main branch protection",
-    "Apply and verify required checks; verify post-merge default-branch workflows"
-  ],
+  "remaining_gates": [],
   "limitations": [
     "No real transactions, account creation or message delivery",
     "Cart/auth rejection and unavailable stock simulated",
@@ -1148,6 +1145,346 @@
   "pull_request": "https://github.com/MiltonKlun/PG_Original_POM/pull/1",
   "temporary_experiment_pr": "https://github.com/MiltonKlun/PG_Original_POM/pull/2",
   "revision_note": "PR run head_sha identifies the source branch. Report revision identifies the GitHub-generated merge commit tested against main; these intentionally differ.",
-  "latest_checks": "The current PR #1 required checks are authoritative for later documentation-only commits; see the PR URL.",
-  "temporary_experiment_status": "Price and temporary PR triggers reverted; PR #2 closed without merge."
+  "latest_checks": "Main Mock CI and protected PR checks remain authoritative for documentation-only updates after the implementation merge.",
+  "temporary_experiment_status": "Price and temporary PR triggers reverted; PR #2 closed without merge.",
+  "core_milestone_met": true,
+  "post_merge_runs": [
+    {
+      "run_id": 34925656852,
+      "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34925656852",
+      "workflow": "Mock CI",
+      "head_sha": "038bab1ed824816f53646eb59d3968f8284c9096",
+      "head_branch": "main",
+      "event": "push",
+      "conclusion": "success",
+      "created_at": "2026-09-15T03:36:48Z",
+      "jobs": [
+        {
+          "name": "Mock UI (Chromium)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34925656852/job/104243043370"
+        },
+        {
+          "name": "Quality (windows-latest)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34925656852/job/104243043493"
+        },
+        {
+          "name": "Quality (ubuntu-24.04)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34925656852/job/104243043512"
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 10380220733,
+          "name": "mock-chromium-1",
+          "expires_at": "2026-09-29T03:37:44Z",
+          "expired": false
+        },
+        {
+          "id": 10379573175,
+          "name": "quality-ubuntu-24.04-1",
+          "expires_at": "2026-09-29T03:37:06Z",
+          "expired": false
+        },
+        {
+          "id": 10379567132,
+          "name": "quality-windows-latest-1",
+          "expires_at": "2026-09-29T03:37:32Z",
+          "expired": false
+        }
+      ],
+      "inspection": {
+        "reports": [
+          {
+            "run_id": "mock-chromium",
+            "target": "mock",
+            "browser": [
+              "chromium"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "038bab1ed824816f53646eb59d3968f8284c9096",
+            "counts": {
+              "passed": 25,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 37,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 12.7
+          },
+          {
+            "run_id": "quality-ubuntu",
+            "target": "mock",
+            "browser": [
+              "chromium"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "038bab1ed824816f53646eb59d3968f8284c9096",
+            "counts": {
+              "passed": 37,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 0,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 2.672
+          },
+          {
+            "run_id": "quality-windows",
+            "target": "mock",
+            "browser": [
+              "chromium"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "038bab1ed824816f53646eb59d3968f8284c9096",
+            "counts": {
+              "passed": 37,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 0,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 4.531
+          }
+        ],
+        "valid_traces": 0,
+        "screenshots": 0,
+        "videos": 0,
+        "server_logs": 1
+      }
+    },
+    {
+      "run_id": 34925659025,
+      "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34925659025",
+      "workflow": "Live read-only smoke",
+      "head_sha": "038bab1ed824816f53646eb59d3968f8284c9096",
+      "head_branch": "main",
+      "event": "workflow_dispatch",
+      "conclusion": "success",
+      "created_at": "2026-09-15T03:36:50Z",
+      "jobs": [
+        {
+          "name": "Live smoke (Chromium, non-required)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34925659025/job/104243052702"
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 10379807785,
+          "name": "live-chromium-1",
+          "expires_at": "2026-09-29T03:37:38Z",
+          "expired": false
+        }
+      ],
+      "inspection": {
+        "reports": [
+          {
+            "run_id": "live-chromium",
+            "target": "live",
+            "browser": [
+              "chromium"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "038bab1ed824816f53646eb59d3968f8284c9096",
+            "counts": {
+              "passed": 3,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 59,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 12.424
+          }
+        ],
+        "valid_traces": 0,
+        "screenshots": 0,
+        "videos": 0,
+        "server_logs": 0
+      }
+    },
+    {
+      "run_id": 34925660770,
+      "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34925660770",
+      "workflow": "Mock browser compatibility",
+      "head_sha": "038bab1ed824816f53646eb59d3968f8284c9096",
+      "head_branch": "main",
+      "event": "workflow_dispatch",
+      "conclusion": "success",
+      "created_at": "2026-09-15T03:36:52Z",
+      "jobs": [
+        {
+          "name": "Mock compatibility (chromium)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34925660770/job/104243058802"
+        },
+        {
+          "name": "Mock compatibility (webkit)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34925660770/job/104243058867"
+        },
+        {
+          "name": "Mock compatibility (firefox)",
+          "conclusion": "success",
+          "url": "https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34925660770/job/104243058903"
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 10379977238,
+          "name": "mock-compat-webkit-1",
+          "expires_at": "2026-09-29T03:38:02Z",
+          "expired": false
+        },
+        {
+          "id": 10379616802,
+          "name": "mock-compat-chromium-1",
+          "expires_at": "2026-09-29T03:37:31Z",
+          "expired": false
+        },
+        {
+          "id": 10379493593,
+          "name": "mock-compat-firefox-1",
+          "expires_at": "2026-09-29T03:37:52Z",
+          "expired": false
+        }
+      ],
+      "inspection": {
+        "reports": [
+          {
+            "run_id": "compat-chromium",
+            "target": "mock",
+            "browser": [
+              "chromium"
+            ],
+            "device": "Pixel 7",
+            "seed": 1729,
+            "revision": "038bab1ed824816f53646eb59d3968f8284c9096",
+            "counts": {
+              "passed": 4,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 58,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 2.637
+          },
+          {
+            "run_id": "compat-firefox",
+            "target": "mock",
+            "browser": [
+              "firefox"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "038bab1ed824816f53646eb59d3968f8284c9096",
+            "counts": {
+              "passed": 25,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 37,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 24.504
+          },
+          {
+            "run_id": "compat-webkit",
+            "target": "mock",
+            "browser": [
+              "webkit"
+            ],
+            "device": null,
+            "seed": 1729,
+            "revision": "038bab1ed824816f53646eb59d3968f8284c9096",
+            "counts": {
+              "passed": 25,
+              "failed": 0,
+              "error": 0,
+              "skipped": 0,
+              "xfailed": 0,
+              "xpassed": 0
+            },
+            "deselected": 37,
+            "collection_errors": 0,
+            "exit_code": 0,
+            "duration_seconds": 21.961
+          }
+        ],
+        "valid_traces": 0,
+        "screenshots": 0,
+        "videos": 0,
+        "server_logs": 0
+      }
+    }
+  ],
+  "publication": {
+    "date": "2026-09-15",
+    "owner_authorized": true,
+    "implementation_pr": "https://github.com/MiltonKlun/PG_Original_POM/pull/1",
+    "merge_commit": "038bab1ed824816f53646eb59d3968f8284c9096",
+    "merge_method": "merge commit; phase history preserved",
+    "branch_protection_readback_verified": true,
+    "applied_protection": {
+      "required_status_checks": {
+        "strict": true,
+        "checks": [
+          {
+            "context": "Quality (ubuntu-24.04)",
+            "app_id": 15368
+          },
+          {
+            "context": "Quality (windows-latest)",
+            "app_id": 15368
+          },
+          {
+            "context": "Mock UI (Chromium)",
+            "app_id": 15368
+          }
+        ]
+      },
+      "enforce_admins": true,
+      "required_pull_request_reviews": {
+        "dismiss_stale_reviews": true,
+        "require_code_owner_reviews": false,
+        "required_approving_review_count": 0
+      },
+      "restrictions": null,
+      "required_conversation_resolution": true,
+      "allow_force_pushes": false,
+      "allow_deletions": false
+    },
+    "payload_correction": "Removed unused legacy contexts field after GitHub rejected contexts plus checks with HTTP 422; required checks unchanged.",
+    "schedule_note": "Weekly cron definitions enabled on main; manual default-branch dispatches passed. Future scheduled occurrences are not claimed as already run.",
+    "versioned_release_or_tag_created": false
+  }
 }

@@ -1,7 +1,7 @@
 # Release notes draft — portfolio modernization
 
-Version/tag: not assigned. Hosted acceptance passed; final merge and main branch
-protection await the owner. Python/mock baseline for local validation: `68a09f4`;
+Version/tag: not assigned. Modernization merged through PR #1; main branch
+protection and post-merge workflows verified. Python/mock baseline: `68a09f4`;
 hosted acceptance includes CI report-ID fix `8b80f72`.
 
 ## Changes
@@ -33,11 +33,11 @@ checkout totals and [the case study](case-study.md) for failure investigations.
 No skipped/retried local cases are accepted. Mock failures do not certify client
 behavior. No checkout, payment, account creation or message delivery was tested.
 
-Tasks 7.1-7.3 now have hosted passing/failing evidence, inspected artifacts and
-live/compatibility outcomes. The remaining owner decision is merging PR #1 and
-applying/verifying the prepared main-branch protection described in
-[ci-maintenance.md](ci-maintenance.md). Default-branch schedules and badges become
-active after merge; no new release or tag has been published.
+All plan tasks and the core milestone are verified. PR #1 merged as `038bab1`;
+the three required checks are enforced on main, including for administrators.
+Default-branch mock CI, read-only live smoke and compatibility runs are recorded
+in release evidence. Weekly schedules are enabled. See
+[ci-maintenance.md](ci-maintenance.md); no versioned release or tag was published.
 
 Suggested About text:
 
