@@ -3,8 +3,9 @@
 Hosted workflows are verified for `MiltonKlun/PG_Original_POM`; run links and
 downloaded-artifact inspections are recorded in
 [release evidence](evidence/release-verification.json). PR #1 is the implementation;
-PR #2 was an isolated, restored acceptance experiment. Main-branch merge and
-protection remain pending owner approval.
+PR #2 was an isolated, restored acceptance experiment. The owner authorized
+publication: PR #1 merged as `038bab1` and main-branch protection is active.
+Default-branch mock, live and compatibility runs are recorded in the evidence.
 
 ## Jobs and scope
 
@@ -28,9 +29,9 @@ override the failed pytest step. No workflow uses `continue-on-error`.
 
 ## Publication acceptance procedure
 
-Steps 1-4 have hosted evidence. Steps 5-6 are the remaining owner-controlled
-publication work. Recheck the latest PR #1 checks before merging; run records
-identify both the source head SHA and the generated PR merge revision tested.
+The sequence below was completed for this modernization and remains the procedure
+for future authorized publication. Run records distinguish the source head SHA
+from the generated PR merge revision; default-branch runs use the merged SHA.
 
 1. Publish the reviewed implementation branch and open a PR to `main` when
    requested. Observe `Mock CI` on the exact pushed SHA; record its run URL in
@@ -47,8 +48,8 @@ identify both the source head SHA and the generated PR merge revision tested.
    default branch after merge and may be delayed by GitHub.
    Before the new workflows existed on main, acceptance used temporary
    `pull_request` triggers on PR #2 with identical runtime steps. Both workflows
-   passed, and the temporary triggers were reverted. First default-branch
-   dispatch/scheduled execution remains a post-merge check.
+   passed, and the temporary triggers were reverted. The first default-branch
+   manual dispatches passed after merge; weekly schedules remain enabled.
 5. In the repository's main-branch ruleset/protection settings, require PRs and
    the exact check names `Quality (ubuntu-24.04)`, `Quality (windows-latest)`, and
    `Mock UI (Chromium)`. Select names from a real run, require an up-to-date
@@ -59,17 +60,18 @@ identify both the source head SHA and the generated PR merge revision tested.
    check their actual outcomes. Close the core milestone only after the branch
    rule is verified. No tag or release is implied by this step.
 
-### Prepared branch protection
+### Applied branch protection
 
-[`branch-protection.json`](branch-protection.json) is the concrete proposed API
+[`branch-protection.json`](branch-protection.json) is the applied API
 payload. It requires the three verified GitHub Actions checks (observed app ID
 15368), an up-to-date PR branch, resolved conversations and no force pushes or
 deletions, including for administrators. It sets zero mandatory human approvals
 for this single-owner portfolio, while still requiring a PR and green checks.
-It does not require the external live workflow. Main was observed unprotected;
-re-read existing settings before applying so later owner changes are preserved.
+It does not require the external live workflow. The settings were applied and
+read back after owner approval. Re-read settings before future authorized
+changes so later owner decisions are preserved.
 
-Once authorized, from the repository root:
+For a future authorized reapplication, from the repository root:
 
 ```text
 gh api --method PUT repos/MiltonKlun/PG_Original_POM/branches/main/protection --input docs/branch-protection.json
@@ -77,7 +79,8 @@ gh api repos/MiltonKlun/PG_Original_POM/branches/main/protection
 ```
 
 Inspect the response and PR merge requirements; do not deliberately merge a
-failing change to test the rule. The payload is prepared, not already applied.
+failing change to test the rule. The accepted request uses `checks` alone;
+GitHub rejected the redundant legacy `contexts` field alongside it (HTTP 422).
 See [GitHub branch protection API](https://docs.github.com/en/rest/branches/branch-protection#update-branch-protection)
 and [manual dispatch requirements](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow).
 

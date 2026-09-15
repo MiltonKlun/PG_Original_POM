@@ -4,7 +4,7 @@ An executable QA automation and portfolio roadmap, based on the actual repositor
 
 **Assessment date:** 2026-09-12. **Baseline:** commit `a0fc620`, branch `feature/framework-improvements`. **Repository:** `MiltonKlun/PG_Original_POM`, public, default branch `main`.
 
-**Status:** implementation and hosted acceptance verified. Tasks 7.1-7.3 now have real CI evidence. Final merge of PR #1 and application/verification of main-branch protection await the owner; the core milestone remains open until that publication gate passes. Checkboxes record verified work only. Following the owner's answers, this document supersedes `01-PG-ORIGINAL-POM.md` as the implementation roadmap; that file remains untouched as historical context. The old plan's “do not relitigate” decisions and checked tasks are not authoritative for this roadmap.
+**Status:** complete. All phase tasks and the core portfolio milestone are verified. PR #1 is merged, required main-branch protection is active, and default-branch mock CI, live smoke and compatibility passed. Checkboxes record verified work only. Following the owner's answers, this document supersedes `01-PG-ORIGINAL-POM.md` as the implementation roadmap; that file remains untouched as historical context. The old plan's “do not relitigate” decisions and checked tasks are not authoritative for this roadmap.
 
 ## 1. Outcome and scope
 
@@ -344,7 +344,7 @@ The test-runner's page/context fixtures, base URL support, and evidence flags ar
 - [x] All eight original scenarios have a documented disposition; accepted Phase 5 scenarios prove observable outcomes.
 - [x] Default local execution is deterministic, isolated, headless, and sends no requests to production.
 - [x] Three consecutive full local runs pass with no retries or unexplained skips; deliberate representative regressions fail.
-- [ ] Required CI validates static/offline and mock UI checks, exposes failures, and retains useful reports/evidence.
+- [x] Required CI validates static/offline and mock UI checks, exposes failures, and retains useful reports/evidence.
 - [x] Live execution is separate, bounded, and honestly reported, including unverified/blocked behavior.
 - [x] Browser/mobile support claims match actual recorded runs.
 - [x] README and case study accurately identify the client work, simulation scope, coverage, evidence, limitations, and design reasoning.
@@ -452,3 +452,13 @@ Restoring the original expectation produced [green recovery CI](https://github.c
 `docs/evidence/release-verification.json` records actual job conclusions, source head SHAs, tested PR merge revisions, artifact IDs/expiry and inspected counts for six hosted runs. Python/mock source and pins still match `68a09f4`; only the CI report-ID fix changes execution configuration. The latest required checks on PR #1 remain authoritative for its latest documentation commit.
 
 All phase tasks are now verified for their implementation scope. The remaining core milestone gate is enforcing required checks on main after owner approval: exact prepared settings are in `docs/branch-protection.json`, with apply/verify instructions in `docs/ci-maintenance.md`. Main was observed unprotected; no settings, merge, tag or release was changed. After approval, apply/verify protection, merge the reviewed green PR, verify default-branch CI and dispatch the optional workflows. This is the final publication step, not unfinished test implementation.
+
+## Execution evidence - Approved publication and completion
+
+2026-09-15, owner explicitly approved merging PR #1, applying prepared protection and verifying post-merge workflows. Applied main protection with the three GitHub Actions checks, strict up-to-date checks, admin enforcement and resolved conversations; force pushes/deletion remain disabled, live stays non-required. GitHub rejected simultaneous legacy `contexts` and newer `checks` fields (HTTP 422); removed the unused legacy field, reapplied successfully, and verified the full response against the corrected `docs/branch-protection.json`. Required checks on PR #1 all passed; marked it ready and merged the exact approved head without an admin bypass.
+
+[PR #1](https://github.com/MiltonKlun/PG_Original_POM/pull/1) merged as `038bab1ed824816f53646eb59d3968f8284c9096`, preserving phase commits. On that main revision, [Mock CI](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34925656852) passed 37 offline cases on each OS and 25 Chromium UI cases; [live smoke](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34925659025) passed 3 and deselected 59; [compatibility](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34925660770) passed Firefox 25, WebKit 25 and Pixel 7 emulation 4. Downloaded all three runs' artifacts and verified JUnit/JSON counts, exit codes and exact merged revisions. No skips or automatic retries occurred.
+
+`docs/evidence/release-verification.json` records the post-merge run/job/artifact links and verified protection payload. README, maintenance, case study and agent instructions now describe completed implementation and current operation. Final status/evidence documentation follows the same protected PR process. Future default-branch scheduled occurrences are enabled, not represented as already executed; no tag/versioned release was created.
+
+Core portfolio milestone: MET. No core implementation or publication task remains. Follow the maintenance procedure and the explicitly deferred extensions only under subsequent scope. Preserve the old untracked plan and unrelated work.

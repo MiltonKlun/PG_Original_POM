@@ -19,8 +19,9 @@ Hosted acceptance is verified in [PR #1](https://github.com/MiltonKlun/PG_Origin
 [deliberate failure evidence](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922413481),
 [live smoke](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559492), and
 [compatibility](https://github.com/MiltonKlun/PG_Original_POM/actions/runs/34922559490).
-The badges above follow the default branch; its new workflow status and schedules
-become active after merge. Final merge and branch protection remain pending.
+PR #1 is merged and `main` is protected by the three required mock CI checks.
+The badges above follow the default branch; weekly live and compatibility
+schedules are enabled. Post-merge runs are recorded in the release evidence.
 See [IMPROVEMENTS.md](IMPROVEMENTS.md), the [case study](docs/case-study.md), and
 [release evidence](docs/evidence/release-verification.json).
 
@@ -87,8 +88,7 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pytest
 ```
 
-During review, check out the implementation branch after cloning; `main` gains
-these commands after merge. Direct venv paths avoid a PowerShell activation
+The quickstarts are available on `main`. Direct venv paths avoid a PowerShell activation
 policy change. The headless default starts/stops its own Python server on
 `http://127.0.0.1:8090`. No global packages or `.env` are required.
 
