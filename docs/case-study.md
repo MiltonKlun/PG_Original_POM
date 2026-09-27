@@ -125,7 +125,7 @@ menu journey now passes on live too.
 
 | Measure | Value |
 |---|---|
-| Collected cases | 115: 43 UI, 72 offline framework |
+| Collected cases | 122: 43 UI, 79 offline framework |
 | Mutation score | 19 of 19 injected defects detected (first measured at 6 of 13) |
 | Mock run (Windows, Chromium) | ~15 s |
 | Live read-only cases | 19 (`live_safe`), 11 in the weekly live run |

@@ -10,6 +10,7 @@ from pathlib import Path
 from threading import Thread, Event
 from time import monotonic
 from urllib.error import URLError
+from urllib.parse import unquote, urlsplit
 from urllib.request import build_opener, HTTPRedirectHandler
 
 ROOT = Path(__file__).resolve().parents[1] / "mock_site"
@@ -21,9 +22,34 @@ class NoRedirect(HTTPRedirectHandler):
         return None
 
 
+# Same public surface as the nginx image (see mock_site/Dockerfile COPY lines).
+PUBLIC_FILES = {"index.html", "app.js", "style.css", "catalog.json", "__health"}
+PUBLIC_DIRS = {"productos", "contacto", "account", "search"}
+
+
+def is_public(url_path: str) -> bool:
+    parts = [part for part in unquote(urlsplit(url_path).path).split("/") if part]
+    if not parts:
+        return True
+    if parts[0] in PUBLIC_DIRS:
+        return True
+    return len(parts) == 1 and parts[0] in PUBLIC_FILES
+
+
 class Handler(SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
         pass  # Browser diagnostics record failed requests; no raw request logging.
+
+    def send_head(self):
+        # Contract, Dockerfile and server config are repository files, not site.
+        if not is_public(self.path):
+            self.send_error(404)
+            return None
+        return super().send_head()
+
+    def list_directory(self, path):
+        self.send_error(404)  # nginx refuses listings too (autoindex off).
+        return None
 
 
 class LocalHTTPServer(ThreadingHTTPServer):
@@ -92,8 +118,6 @@ def mock_target(settings):
         verify_mock(settings.base_url)
         yield settings.base_url
     else:
-        from urllib.parse import urlsplit
-
         parts = urlsplit(settings.base_url)
         with MockServer(parts.hostname, parts.port or 80) as server:
             verify_mock(server.url)

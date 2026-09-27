@@ -83,7 +83,7 @@ P0 = revenue or order correctness, P1 = discovery and forms.
 | MONEY | P0 | ARS display parsing to integer minor units; ambiguous or installment text rejected; formatting round-trips | `framework/test_money.py` (30 cases) | Offline |
 | CONTRACT | P1 | Page-object locators resolve without changing state: header, cart drawer, menu panel, listing, filters, card metadata, product form and price attribute, login, contact | `test_contract.py` (7 cases) | Mock + live |
 
-Totals: 115 collected cases, of which 43 are UI and 72 are offline framework
+Totals: 122 collected cases, of which 43 are UI and 79 are offline framework
 checks. 19 UI cases are `live_safe`; the weekly live run selects the 11 that
 are also `smoke` or `contract`.
 
@@ -120,6 +120,7 @@ are also `smoke` or `contract`.
 | Compatibility | Weekly / manual | Full mock UI on Firefox and WebKit; Chromium Pixel 7 emulation smoke | No |
 | Live smoke | Weekly / manual | `(smoke or contract) and live_safe`, Chromium, serial, no retries | No; a failure stays visible |
 | Mutation score | Weekly / manual / PRs touching tests or the mock | All mutants against the mock UI suite; fails below 90% | No |
+| Security | PR / push to `main` / weekly / manual | pip-audit on both hashed locks; zizmor (auditor level) on all workflows | No |
 
 A change is ready when the required checks are green with no unexplained
 skips, xfails or reruns. Sensitivity was verified by deliberately breaking
