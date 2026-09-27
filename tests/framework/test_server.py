@@ -16,6 +16,8 @@ def test_routes_and_cleanup():
             "/account/login/",
             "/account/reset/",
             "/productos/qa-remera/",
+            "/productos/pg-buzo/",
+            "/productos/pg-gorro/",
             "/search/?q=missing",
         ]:
             with urlopen(server.url + route) as response:

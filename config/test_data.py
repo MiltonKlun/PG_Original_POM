@@ -38,16 +38,40 @@ def load_data(path: Path = DATA_PATH) -> dict:
                     raise ValueError("Variant fields must be strings")
         if shirt["alternate"]["variant"] == shirt["variant"]:
             raise ValueError("Alternate variant must differ from the default")
-        search_ids = set()
-        for case in data["search_cases"]:
-            expected = case["expected"]
-            if not (isinstance(case["term"], str) and case["term"].strip()):
-                raise ValueError("Search term must be a nonempty string")
-            if not expected or not all(isinstance(n, str) for n in expected):
-                raise ValueError("Expected search results must be product names")
-            if case["id"] in search_ids:
-                raise ValueError("Case IDs must be unique")
-            search_ids.add(case["id"])
+        pricing = shirt["pricing"]
+        for tier in (pricing["discounted"], pricing["regular"]):
+            if type(tier["price"]) is not int or tier["price"] <= 0:
+                raise ValueError("Price must be positive integer minor units")
+            if not (
+                isinstance(tier["color"], str) and isinstance(tier["variant"], str)
+            ):
+                raise ValueError("Variant fields must be strings")
+        discounted = pricing["discounted"]
+        if type(discounted["compare_at"]) is not int or (
+            discounted["compare_at"] <= discounted["price"]
+        ):
+            raise ValueError("Compare-at price must be an integer above price")
+        if pricing["regular"]["compare_at"] is not None:
+            raise ValueError("Regular price must not have a compare-at price")
+        catalog = data["shop"]["catalog"]
+        if type(catalog["page_size"]) is not int or catalog["page_size"] < 1:
+            raise ValueError("Catalog page size must be a positive integer")
+        if len(set(catalog["products"])) != len(catalog["products"]):
+            raise ValueError("Catalog product names must be unique")
+        for rows, keys in [
+            (data["search_cases"], ("id", "term")),
+            (data["filter_cases"], ("id", "name", "value")),
+        ]:
+            ids = set()
+            for case in rows:
+                if not all(isinstance(case[k], str) and case[k].strip() for k in keys):
+                    raise ValueError("Case fields must be nonempty strings")
+                expected = case["expected"]
+                if not expected or not all(isinstance(n, str) for n in expected):
+                    raise ValueError("Expected results must be product names")
+                if case["id"] in ids:
+                    raise ValueError("Case IDs must be unique")
+                ids.add(case["id"])
         return data
     except (OSError, ValueError, KeyError, TypeError) as exc:
         raise ValueError(f"Invalid test data in {path}: {exc}") from exc

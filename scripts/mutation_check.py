@@ -99,6 +99,8 @@ def load_catalog(path: Path = CATALOG) -> list[Mutant]:
 
 
 def apply_edits(text: str, edits: tuple[Edit, ...]) -> str:
+    # Checkouts may use CRLF (core.autocrlf); snippets are written with LF.
+    text = text.replace("\r\n", "\n")
     for edit in edits:
         count = text.count(edit.find)
         if count != 1:

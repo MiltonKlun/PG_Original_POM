@@ -1,13 +1,15 @@
+import re
 import pytest
 from playwright.sync_api import expect
 
-pytestmark = [pytest.mark.smoke, pytest.mark.mock_only]
+pytestmark = [pytest.mark.smoke, pytest.mark.live_safe]
 
 
-def test_menu_reaches_product(home_page, shop_page, product_page, test_data):
+def test_menu_reaches_product(home_page, shop_page, product_page):
     home_page.open()
     home_page.navbar.open_shop_from_menu()
-    name = test_data["shop"]["shirt"]["name"]
+    expect(home_page.page).to_have_url(re.compile(r"/productos/?$"))
+    name = shop_page.first_product_name()
     shop_page.open_product(name)
     expect(product_page.heading).to_have_text(name)
     expect(product_page.add_button).to_be_enabled()

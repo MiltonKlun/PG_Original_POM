@@ -11,16 +11,23 @@
           "replace": "products.some(x => x.name.toLowerCase().includes(query.toLowerCase()))"
         }
       ],
-      "killed_by": ["test_search_filters_catalog"]
+      "killed_by": [
+        "test_search_filters_catalog"
+      ]
     },
     {
       "id": "M02",
       "description": "Cart subtotal ignores line quantity",
       "file": "mock_site/app.js",
       "edits": [
-        {"find": "sum + line.price * line.quantity, 0", "replace": "sum + line.price, 0"}
+        {
+          "find": "sum + line.price * line.quantity, 0",
+          "replace": "sum + line.price, 0"
+        }
       ],
-      "killed_by": ["test_cart_quantity"]
+      "killed_by": [
+        "test_cart_quantity"
+      ]
     },
     {
       "id": "M03",
@@ -32,7 +39,9 @@
           "replace": "if (false) existing.quantity += quantity;"
         }
       ],
-      "killed_by": ["test_repeat_add_merges_line"]
+      "killed_by": [
+        "test_repeat_add_merges_line"
+      ]
     },
     {
       "id": "M04",
@@ -40,11 +49,13 @@
       "file": "mock_site/app.js",
       "edits": [
         {
-          "find": "else lines.push({id:product.id, name:product.name, variant, price:product.price, quantity});",
-          "replace": "else lines.push({id:product.id, name:product.name, variant, price:product.price, quantity: 1});"
+          "find": "else lines.push({id:product.id, name:product.name, variant, price:unitPrice, quantity});",
+          "replace": "else lines.push({id:product.id, name:product.name, variant, price:unitPrice, quantity: 1});"
         }
       ],
-      "killed_by": ["test_add_with_quantity"]
+      "killed_by": [
+        "test_add_with_quantity"
+      ]
     },
     {
       "id": "M05",
@@ -60,7 +71,9 @@
           "replace": "function saveCart(lines) { memoryCart = lines; renderCart(); }"
         }
       ],
-      "killed_by": ["test_cart_persists_across_navigation"]
+      "killed_by": [
+        "test_cart_persists_across_navigation"
+      ]
     },
     {
       "id": "M06",
@@ -72,7 +85,9 @@
           "replace": "saveCart([])"
         }
       ],
-      "killed_by": ["test_remove_one_of_two_lines"]
+      "killed_by": [
+        "test_remove_one_of_two_lines"
+      ]
     },
     {
       "id": "M07",
@@ -84,7 +99,10 @@
           "replace": "<p class=\"js-cart-item-subtotal\">${money(line.price)}</p>"
         }
       ],
-      "killed_by": ["test_cart_quantity", "test_add_with_quantity"]
+      "killed_by": [
+        "test_cart_quantity",
+        "test_add_with_quantity"
+      ]
     },
     {
       "id": "M08",
@@ -96,26 +114,41 @@
           "replace": ".map(el=>el.dataset.option).slice(0, 1).join(' / ')"
         }
       ],
-      "killed_by": ["test_add_to_cart_flow"]
+      "killed_by": [
+        "test_add_to_cart_flow"
+      ]
     },
     {
       "id": "M09",
       "description": "Color filter is checked but results are not filtered",
       "file": "mock_site/app.js",
       "edits": [
-        {"find": "(!color || p.colors.includes(color))", "replace": "(!color || true)"}
+        {
+          "find": "(!color || colorsOf(p).includes(color))",
+          "replace": "(!color || true)"
+        }
       ],
-      "killed_by": ["test_filter_color_and_clear"]
+      "killed_by": [
+        "test_filter_and_clear"
+      ]
     },
     {
       "id": "M10",
       "description": "Sold-out product can be added to the cart",
       "file": "mock_site/app.js",
       "edits": [
-        {"find": " ${product.available?'':'disabled'}>", "replace": ">"},
-        {"find": "if (!product.available) return;", "replace": ""}
+        {
+          "find": " ${product.available?'':'disabled'}>",
+          "replace": ">"
+        },
+        {
+          "find": "if (!product.available) return;",
+          "replace": ""
+        }
       ],
-      "killed_by": ["test_unavailable_product"]
+      "killed_by": [
+        "test_unavailable_product"
+      ]
     },
     {
       "id": "M11",
@@ -127,7 +160,9 @@
           "replace": "document.querySelector('#modal-cart .alert-info').hidden = false;"
         }
       ],
-      "killed_by": ["test_add_to_cart_flow"]
+      "killed_by": [
+        "test_add_to_cart_flow"
+      ]
     },
     {
       "id": "M12",
@@ -139,7 +174,9 @@
           "replace": "renderCart();"
         }
       ],
-      "killed_by": ["test_cart_quantity"]
+      "killed_by": [
+        "test_cart_quantity"
+      ]
     },
     {
       "id": "M13",
@@ -151,7 +188,96 @@
           "replace": "main.innerHTML = productHTML(product).replace(/<h1>.*?<\\/h1>/, '<h1>' + escapeHTML(products[0].name) + '</h1>');"
         }
       ],
-      "killed_by": ["test_cart_without_variants", "test_unavailable_product"]
+      "killed_by": [
+        "test_cart_without_variants",
+        "test_unavailable_product"
+      ]
+    },
+    {
+      "id": "M14",
+      "description": "Product price does not follow the selected variant",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "option.classList.add('selected');\n      showPrice(product);",
+          "replace": "option.classList.add('selected');"
+        }
+      ],
+      "killed_by": [
+        "test_regular_variant_price_reaches_cart",
+        "test_discounted_variant_shows_compare_price"
+      ]
+    },
+    {
+      "id": "M15",
+      "description": "Cart line uses the base price instead of the selected variant's price",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "const unitPrice = selectedVariant(product).price;",
+          "replace": "const unitPrice = product.variants[0].price;"
+        }
+      ],
+      "killed_by": [
+        "test_regular_variant_price_reaches_cart"
+      ]
+    },
+    {
+      "id": "M16",
+      "description": "Loading more products repeats the first page",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "const next = filtered.slice(shown, shown + pageSize);",
+          "replace": "const next = filtered.slice(0, pageSize);"
+        }
+      ],
+      "killed_by": [
+        "test_load_more_catalog"
+      ]
+    },
+    {
+      "id": "M17",
+      "description": "Size filter is checked but results are not filtered",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "(!size || sizesOf(p).includes(size))",
+          "replace": "(!size || true)"
+        }
+      ],
+      "killed_by": [
+        "test_filter_and_clear"
+      ]
+    },
+    {
+      "id": "M18",
+      "description": "Compare-at price stays visible on a variant without discount",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "compare.style.display = variant.compare_at ? 'block' : 'none';",
+          "replace": "compare.style.display = 'block';"
+        }
+      ],
+      "killed_by": [
+        "test_regular_variant_price_reaches_cart"
+      ]
+    },
+    {
+      "id": "M19",
+      "description": "Menu SHOP toggle does not open its panel",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "toggle.nextElementSibling.hidden = false;",
+          "replace": "toggle.nextElementSibling.hidden = true;"
+        }
+      ],
+      "killed_by": [
+        "test_menu_reaches_product",
+        "test_menu_shop_panel"
+      ]
     }
   ]
 }

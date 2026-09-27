@@ -72,7 +72,7 @@
 |---|---|---|
 | **Runs against** | `mock_site/` on `http://127.0.0.1:8090` | `https://www.pgoriginal.com` |
 | **Data** | Synthetic products (`QA Remera`, `QA Gorra`, `QA Agotado`) and fixed prices | Whatever the store shows that day |
-| **Covers** | Everything, including cart add/quantity/remove, sold-out products, invalid login and form validation | Home, search, product details (the weekly smoke); reset link and non-submitting contact checks on demand |
+| **Covers** | Everything, including cart add/quantity/remove, sold-out products, invalid login and form validation | Home, menu, search, product details and the locator contract (weekly); reset link and non-submitting contact checks on demand |
 | **Purpose** | Deterministic, repeatable proof that the tests detect wrong outcomes | Early warning that the real markup has changed |
 | **Never does** | Contact external hosts | Add to cart, log in, submit forms, send email, bypass challenges |
 
@@ -122,20 +122,21 @@ flowchart LR
 
 ## Test coverage
 
-**99 cases:** 32 browser scenarios and 67 offline framework checks
+**115 cases:** 43 browser scenarios and 72 offline framework checks
 (settings validation, data loading, money parsing and formatting, server
-lifecycle, mutation harness). A mutation check injects 13 realistic storefront
-defects into the simulation; the suite currently detects all 13.
+lifecycle, mutation harness). A mutation check injects 19 realistic storefront
+defects into the simulation; the suite currently detects all 19.
 
 | Area | Scenarios | Target |
 |---|---|---|
-| Home & navigation | Title, header/footer, shop link; menu → shop → product | Mock + live / mock |
+| Home & navigation | Title, header/footer, shop link; menu → SHOP panel → product | Mock + live |
 | Search | Open, focus and close; matching results; empty-result state; exact result sets (3 datasets) | Mock + live / mock |
-| Shop | Color filter apply/clear; sold-out product can't be added | Mock |
+| Shop | Color and size filters apply/clear; load-more pagination; per-variant price and compare-at price, carried into the cart; sold-out product can't be added | Mock |
 | Product details | Clicked product == page heading; current price is a valid ARS amount | Mock + live |
 | Cart | Add with size/color, add with quantity, repeat add merges lines, quantity update, removal of one or all lines, persistence across pages, empty start, product without variants | Mock |
 | Authentication | Invalid credentials (2 datasets); native validation (3 cases); reset-password navigation | Mock / mock / mock + live |
 | Contact | Seeded, accented and whitespace inputs; malformed emails; disabled submit | Mock + live / mock |
+| Locator contract | Every page-object locator resolves on the target without changing state (7 pages/components) | Mock + live |
 
 The full risk-based scenario map, eligibility rules and known gaps are in the
 [test strategy](docs/test-strategy.md).
@@ -203,8 +204,8 @@ finally { Remove-Item Env:TARGET }
 TARGET=live python -m pytest tests -m "smoke and live_safe" --browser chromium
 ```
 
-This selects three read-only checks (home/shop access, search, product
-details). On the live target, every test not marked `live_safe` is deselected
+This selects four read-only checks (home/shop access, menu navigation,
+search, product details). On the live target, every test not marked `live_safe` is deselected
 automatically.
 
 **Optional: Docker-served simulation**
@@ -255,7 +256,7 @@ environment problems apart.
 |---|---|---|---|
 | [Mock CI](.github/workflows/ci.yml) | PR / push to `main` | Black, Flake8 and framework checks on Ubuntu + Windows; all UI tests on Chromium against the Docker-served simulation | Yes |
 | [Browser compatibility](.github/workflows/compatibility.yml) | Weekly / manual | Full UI suite on Firefox and WebKit; Pixel 7 smoke | No |
-| [Live read-only smoke](.github/workflows/live-smoke.yml) | Weekly / manual | Three `smoke and live_safe` checks on pgoriginal.com | No |
+| [Live read-only smoke](.github/workflows/live-smoke.yml) | Weekly / manual | 11 read-only smoke and locator-contract checks on pgoriginal.com | No |
 | [Mutation score](.github/workflows/mutation.yml) | Weekly / manual / PRs touching tests or the simulation | Injects each catalogued defect and fails if fewer than 90% are detected | No |
 
 Every job uploads its reports (and, for mock failures, traces, screenshots,

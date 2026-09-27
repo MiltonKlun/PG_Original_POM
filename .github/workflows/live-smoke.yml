@@ -28,7 +28,7 @@ jobs:
           cache-dependency-path: requirements.txt
       - run: python -m pip install --require-hashes -r requirements.txt
       - run: python -m playwright install --with-deps chromium
-      - run: python -m pytest tests -m "smoke and live_safe" --browser chromium --run-id live-chromium
+      - run: python -m pytest tests -m "(smoke or contract) and live_safe" --browser chromium --run-id live-chromium
       - name: Summarize results
         if: always()
         run: python scripts/ci_summary.py reports/live-chromium/summary.json

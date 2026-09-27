@@ -24,6 +24,20 @@
         "size": "S",
         "color": "Negro",
         "variant": "S / Negro"
+      },
+      "pricing": {
+        "discounted": {
+          "color": "Negro",
+          "variant": "M / Negro",
+          "price": 2900000,
+          "compare_at": 3900000
+        },
+        "regular": {
+          "color": "Blanco",
+          "variant": "M / Blanco",
+          "price": 3900000,
+          "compare_at": null
+        }
       }
     },
     "cap": {
@@ -32,6 +46,16 @@
     },
     "unavailable": {
       "name": "QA Agotado"
+    },
+    "catalog": {
+      "page_size": 4,
+      "products": [
+        "PG Buzo",
+        "PG Gorro",
+        "QA Agotado",
+        "QA Gorra",
+        "QA Remera"
+      ]
     }
   },
   "contact_cases": [
@@ -69,6 +93,26 @@
       "expected": [
         "QA Agotado",
         "QA Gorra",
+        "QA Remera"
+      ]
+    }
+  ],
+  "filter_cases": [
+    {
+      "id": "color-negro",
+      "name": "Color",
+      "value": "Negro",
+      "expected": [
+        "QA Remera"
+      ]
+    },
+    {
+      "id": "size-m",
+      "name": "Talle",
+      "value": "M",
+      "expected": [
+        "PG Buzo",
+        "QA Agotado",
         "QA Remera"
       ]
     }
