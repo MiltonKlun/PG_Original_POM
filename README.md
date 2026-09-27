@@ -6,7 +6,8 @@
   <img src="assets/pg_logo.png" alt="PG Original Logo" width="300"/>
   <br>
   <br>
-  <h2>Automated Testing Framework for <a href="https://www.pgoriginal.com/">pgoriginal.com</a>.</h2>
+  <h2>Test automation framework built from my QA work on <a href="https://www.pgoriginal.com/">pgoriginal.com</a></h2>
+  <p><b>Python · Playwright · Pytest · Page Object Model</b></p>
 </div>
 
 
@@ -28,69 +29,118 @@
   <img src="https://img.shields.io/badge/Framework-Playwright-orange" alt="Framework"/>
 </div>
 
+<br>
 
-## Architecture & Design Principles
+> [!NOTE]
+> **About this repository.** This is a portfolio version of the test
+> automation I built while testing the [PG Original](https://www.pgoriginal.com/)
+> e-commerce storefront. It is **not** PG Original's production test suite and
+> it doesn't run against their live store by default. Tests run against a
+> **local simulation of the storefront** that reproduces the real site's
+> markup with synthetic products, carts and forms. An optional read-only
+> smoke check against a few public pages confirms that the page objects still
+> match the real site. It never adds to cart, logs in or submits forms.
 
-### 🧩 Key Patterns Implemented
+## Contents
 
-*   **Page Object Model (POM)**: Selectors and domain actions live in `pages/` and `components/`; business assertions live in `tests/`.
-*   **Composition & Inheritance**: Page objects inherit a small `BasePage`, which composes shared modules such as `Navbar`, `SearchModal`, and `CartDrawer`.
-*   **DRY (Don't Repeat Yourself)**: Centralized target configuration, reusable components, and fixtures managed by pytest-playwright.
-*   **Explicit Waits**: Playwright auto-waiting and retrying `expect` assertions wait for observable UI state.
+- [What this project demonstrates](#what-this-project-demonstrates)
+- [How the simulation relates to the real store](#how-the-simulation-relates-to-the-real-store)
+- [Architecture](#architecture)
+- [Test coverage](#test-coverage)
+- [Getting started](#getting-started)
+- [Running tests](#running-tests)
+- [Reports and debugging](#reports-and-debugging)
+- [Continuous integration](#continuous-integration)
+- [Documentation](#documentation)
 
-## Testing Features
+## What this project demonstrates
 
-### 1. 📊 Data Driven Testing (DDT)
+| Area | How it shows up in the code |
+|---|---|
+| **Page Object Model** | Page objects in `pages/` own locators and user actions; shared UI (navbar, search, cart drawer, cookie banner) are composed components in `components/`, not base-class inheritance. |
+| **Business assertions** | Tests check outcomes, not visibility: the clicked product is the product shown; cart lines match exact product, variant, quantity, line amount and subtotal. |
+| **Resilient locators** | Role/label locators where the site provides them; CSS scoped to the owning form or panel where it doesn't, with the reason documented next to it. No arbitrary `.first`, no fixed sleeps. |
+| **Environment safety** | Target and URL are validated before a browser starts. `live_safe` / `mock_only` markers are enforced at collection, so no cart or form action can reach production. Mock runs fail on any external request. |
+| **Data-driven testing** | Named datasets in JSON drive parametrized auth and contact cases; seeded Faker (`es_AR`) makes generated data reproducible per test. |
+| **Correct money handling** | ARS prices (`$29.000,00`) parsed into integer minor units with a strict parser that rejects instalment and ambiguous text. |
+| **Evidence and reporting** | Per-run HTML, JUnit and JSON reports tagged with target, browser, seed and git revision; trace, screenshot and video kept on failure. |
+| **CI/CD** | Required checks on Ubuntu and Windows, Docker-served mock UI tests, weekly cross-browser and live read-only runs, SHA-pinned actions, hash-locked dependencies. |
 
-- **Implementation**: Named datasets in `data/test_data.json` parameterize negative login and contact-input cases.
-- **Benefit**: Cover multiple inputs while keeping expected data separate from the synthetic storefront's catalog.
+## How the simulation relates to the real store
 
-### 2. 🛡️ Business Assertions (Playwright)
+| | Local simulation (default) | Live read-only smoke (optional) |
+|---|---|---|
+| **Runs against** | `mock_site/` on `http://127.0.0.1:8090` | `https://www.pgoriginal.com` |
+| **Data** | Synthetic products (`QA Remera`, `QA Gorra`, `QA Agotado`) and fixed prices | Whatever the store shows that day |
+| **Covers** | Everything, including cart add/quantity/remove, sold-out products, invalid login and form validation | Home, search, product details (the weekly smoke); reset link and non-submitting contact checks on demand |
+| **Purpose** | Deterministic, repeatable proof that the tests detect wrong outcomes | Early warning that the real markup has changed |
+| **Never does** | Contact external hosts | Add to cart, log in, submit forms, send email, bypass challenges |
 
-- **Implementation**: Product tests verify selected identity and current price. Cart tests verify exact product, variant, quantity, line amount, and subtotal.
-- **Benefit**: Detect incorrect shopping outcomes, including quantity updates and removal, with retained evidence when a test fails.
+The simulation's markup is based on what I observed on the real site
+(see the [site contract](docs/site-contract.md)). Its behavior is specified
+in [`mock_site/CONTRACT.md`](mock_site/CONTRACT.md). Mock results show that the
+automation works. They are not a claim about PG Original's production systems.
 
-### 3. 🎭 Dynamic Data Generation (`Faker`)
+## Architecture
 
-- **Implementation**: Contact tests generate reproducible Spanish-language inputs from the case ID and seed (`1729` by default), using `example.com` email addresses.
-- **Benefit**: Replay generated inputs alongside explicit accented-name, whitespace, and malformed-email cases.
-
-The suite includes **62 cases: 37 offline checks and 25 UI cases**. It covers navigation, search, product details, filtering, cart behavior, and non-submitting form checks. Each UI case receives an isolated browser context.
-
-## Project Structure
-
-```text
-├── pages/                  # 📍 Page Objects
-│   ├── base_page.py        #    - Shared navigation and component composition
-│   ├── home_page.py        #    - Home navigation
-│   ├── shop_page.py        #    - Product discovery and filtering
-│   ├── product_page.py     #    - Product details and variant selection
-│   ├── login_page.py       #    - Login and reset-page controls
-│   └── contact_page.py     #    - Contact fields and native validation
-├── components/             # 🧩 Navbar, search modal, cart drawer, cookies
-├── config/                 # ⚙️ Target settings, seeded data, money, reporting
-├── tests/                  # 🧪 UI scenarios and offline framework checks
-├── data/                   # 💾 Named test inputs and expected values
-├── mock_site/              # 🛍️ Local synthetic storefront and Dockerfile
-├── scripts/                # 🛠️ Mock server and CI summaries
-├── .github/workflows/      # 🔄 Mock CI, live smoke, browser compatibility
-├── requirements.in         # 📦 Direct dependency pins
-└── requirements.txt        # 📦 Hashed dependency resolution
+```mermaid
+flowchart LR
+    T["tests/<br/>scenarios + assertions"] --> P["pages/<br/>Home · Shop · Product · Login · Contact"]
+    P --> C["components/<br/>Navbar · SearchModal · CartDrawer · CookieBanner"]
+    P --> PW["Playwright Page"]
+    C --> PW
+    T --> D["data/ + config/<br/>datasets · settings · money"]
+    PW -->|TARGET=mock| M["Local simulation<br/>mock_site/"]
+    PW -->|TARGET=live, live_safe only| L["pgoriginal.com<br/>read-only"]
 ```
 
-## Setup & Execution
+```text
+├── pages/                  # Page objects: navigation and user actions
+│   ├── base_page.py        #   Shared navigation; composes UI components
+│   ├── home_page.py
+│   ├── shop_page.py        #   Product discovery and filtering
+│   ├── product_page.py     #   Product details, variants, add to cart
+│   ├── login_page.py       #   Login and password-reset controls
+│   └── contact_page.py     #   Contact fields (never submitted)
+├── components/             # Navbar, search modal, cart drawer, cookie banner
+├── config/                 # Target settings, test data loader, ARS parser, reporting
+├── tests/                  # UI scenarios + tests/framework/ offline checks
+├── data/                   # Named datasets and expected values
+├── mock_site/              # Local storefront simulation + behavior contract + Dockerfile
+├── scripts/                # Mock server lifecycle and CI summary
+└── .github/workflows/      # Mock CI, live smoke, browser compatibility
+```
 
-> **DISCLAIMER:**
-> This project is a tailored QA framework designed for **PG Original** as a client deliverable.
-> *   **Authorized Use**: Verified for portfolio demonstration by the client.
-> *   **Test Scope**: Default runs use a local simulation. Live checks are read-only; they do not submit credentials, contact messages, purchases, or reset emails. Challenges are not bypassed. Mock results do not certify production transactions.
+**Design rules**
 
-### Prerequisites
+- Tests talk only to page objects; no selectors in tests.
+- Page objects take a Playwright `Page`, navigate with relative paths and never
+  read environment variables or know which target they're running against.
+- Tests own expected values and assertions. Page objects only wait for the
+  result of their own action (e.g. a variant shows as selected).
+- Web-first `expect` for UI state; plain `assert` for computed values.
 
-*   Python 3.12 and `pip`
-*   Docker (optional, for container-based mock serving)
+## Test coverage
 
-### Installation
+**62 cases:** 25 browser scenarios and 37 offline framework checks
+(settings validation, data loading, money parsing, server lifecycle).
+
+| Area | Scenarios | Target |
+|---|---|---|
+| Home & navigation | Title, header/footer, shop link; menu → shop → product | Mock + live / mock |
+| Search | Open, focus and close; matching results; empty-result state | Mock + live |
+| Shop | Color filter apply/clear; sold-out product can't be added | Mock |
+| Product details | Clicked product == page heading; current price is a valid ARS amount | Mock + live |
+| Cart | Add with size/color, quantity update, removal, empty start, product without variants | Mock |
+| Authentication | Invalid credentials (2 datasets); native validation (3 cases); reset-password navigation | Mock / mock / mock + live |
+| Contact | Seeded, accented and whitespace inputs; malformed emails; disabled submit | Mock + live / mock |
+
+The full risk-based scenario map, eligibility rules and known gaps are in the
+[test strategy](docs/test-strategy.md).
+
+## Getting started
+
+**Prerequisites:** Python 3.12. Docker is optional.
 
 ```bash
 git clone https://github.com/MiltonKlun/PG_Original_POM.git
@@ -106,11 +156,11 @@ Activate the environment:
 ```
 
 ```bash
-# Linux / macOS shell
+# Linux / macOS
 source venv/bin/activate
 ```
 
-Install the pinned dependencies and browser:
+Install the hash-locked dependencies and Chromium:
 
 ```bash
 python -m pip install --require-hashes -r requirements.txt
@@ -118,60 +168,55 @@ python -m pip check
 python -m playwright install chromium
 ```
 
-On Linux, use `python -m playwright install --with-deps chromium` for the last command to include required system libraries.
+On Linux, use `python -m playwright install --with-deps chromium` to include
+system libraries. Verified on Windows and Ubuntu; macOS has not been verified.
 
-On Windows, commands can also use `venv\Scripts\python.exe` directly without activating the environment. Windows and Ubuntu execution are verified; macOS has not been verified.
-
-### Running Tests
-
-**Run All Tests:**
+## Running tests
 
 ```bash
-python -m pytest tests/
-```
-
-The default headless run starts and stops its own local mock server at `http://127.0.0.1:8090` and rejects external HTTP(S) requests.
-
-**Run Specific Features:**
-
-```bash
+python -m pytest                 # Full suite against the local simulation (headless)
 python -m pytest -m smoke        # Navigation, search, product smoke
 python -m pytest -m shop         # Shopping and cart flows
-python -m pytest -m auth         # Local negative login and reset navigation
-python -m pytest -m contact      # Non-submitting form checks
-python -m pytest tests/framework # Offline framework checks
-python -m pytest --seed 1729     # Reproduce generated inputs
+python -m pytest -m auth         # Login and password-reset
+python -m pytest -m contact      # Contact form (never submitted)
+python -m pytest tests/framework # Offline framework checks only
+python -m pytest --headed        # Watch the browser
+python -m pytest --seed 1729     # Reproduce generated data
 ```
 
-**Read-Only Live Smoke:**
+The default run starts and stops its own local server on
+`http://127.0.0.1:8090` and blocks any external request.
+
+**Optional: live read-only smoke**
 
 ```powershell
 # Windows PowerShell
 $env:TARGET = "live"
-try {
-    python -m pytest tests -m "smoke and live_safe" --browser chromium
-} finally {
-    Remove-Item Env:TARGET
-}
+try { python -m pytest tests -m "smoke and live_safe" --browser chromium }
+finally { Remove-Item Env:TARGET }
 ```
 
 ```bash
-# Linux / macOS shell
+# Linux / macOS
 TARGET=live python -m pytest tests -m "smoke and live_safe" --browser chromium
 ```
 
-This selects three read-only checks for home/shop access, search controls, and product details. Cart mutations and invalid-login submissions stay local.
+This selects three read-only checks (home/shop access, search, product
+details). On the live target, every test not marked `live_safe` is deselected
+automatically.
 
-**Optional Docker Mock:**
+**Optional: Docker-served simulation**
 
 ```bash
 docker build -t pgoriginal-mock mock_site
 docker run --rm -p 127.0.0.1:8090:80 pgoriginal-mock
+# in another terminal:
+python -m pytest --base-url http://127.0.0.1:8090
 ```
 
-In another terminal with the Python environment active, run `python -m pytest --base-url http://127.0.0.1:8090`. Pytest verifies and reuses the server; stop the foreground Docker command with Ctrl+C when finished.
+Pytest checks the server's identity endpoint and reuses it without stopping it.
 
-**Browser Compatibility:**
+**Cross-browser and mobile emulation**
 
 ```bash
 python -m playwright install firefox webkit
@@ -180,23 +225,62 @@ python -m pytest tests -m "not framework" --browser webkit
 python -m pytest tests -m smoke --browser chromium --device "Pixel 7"
 ```
 
-On Linux, add `--with-deps` when installing browsers. Pixel 7 coverage is mobile emulation. CI runs mock checks on pull requests; live smoke and compatibility also have manual and weekly workflows.
+Pixel 7 is device emulation, not a real device.
 
-### 📑 Reporting
+## Reports and debugging
 
-Each run creates a standalone HTML report, JUnit XML, and JSON summary under `reports/<run-id>/`. Open `report.html` directly in a browser. Reports identify the target, browser, seed, revision, and actual outcomes.
+Each run writes to `reports/<run-id>/`:
 
-Failed cases retain traces, screenshots, and video under `test-results/<run-id>/`; runtime logs are in `logs/`. Review live evidence before sharing because it may contain session or client data.
+- `report.html`: self-contained HTML report (open directly in a browser)
+- `results.xml`: JUnit
+- `summary.json`: counts, target, browser, seed, git revision
+
+Failed tests keep a trace, screenshot and video in `test-results/<run-id>/`,
+and runtime logs go to `logs/`:
 
 ```bash
 python -m playwright show-trace test-results/<run-id>/<failed-case>/trace.zip
 ```
 
-Use `--headed` to watch a local test or `--run-id <unique-name>` to name its reports. Custom run IDs are one-use; choose a new name for each run.
+Use `--run-id <name>` for a named run (IDs are single-use, so evidence is
+never overwritten). The [troubleshooting guide](docs/troubleshooting.md)
+explains how to tell setup errors, assertion failures, locator ambiguity and
+environment problems apart.
+
+## Continuous integration
+
+| Workflow | Trigger | What it runs | Blocks merge |
+|---|---|---|---|
+| [Mock CI](.github/workflows/ci.yml) | PR / push to `main` | Black, Flake8 and framework checks on Ubuntu + Windows; all UI tests on Chromium against the Docker-served simulation | Yes |
+| [Browser compatibility](.github/workflows/compatibility.yml) | Weekly / manual | Full UI suite on Firefox and WebKit; Pixel 7 smoke | No |
+| [Live read-only smoke](.github/workflows/live-smoke.yml) | Weekly / manual | Three `smoke and live_safe` checks on pgoriginal.com | No |
+
+Every job uploads its reports (and, for mock failures, traces, screenshots,
+videos and server logs) as artifacts for 14 days. The job summary refuses to
+render without real JUnit output, so a crashed run can't look green.
+
+## Documentation
+
+- [Test strategy](docs/test-strategy.md): scope, environments, risk-based scenario map, known gaps
+- [Observed site contract](docs/site-contract.md): what the page objects rely on, and accessibility findings on the real store
+- [Case study](docs/case-study.md): design decisions, a real failure investigation, and how the suite was checked for sensitivity
+- [Troubleshooting](docs/troubleshooting.md): rerunning, traces and failure classification
+- [Simulation contract](mock_site/CONTRACT.md): routes and simulated behavior of the local storefront
+
+## Scope and disclaimer
+
+> [!IMPORTANT]
+> This project is based on QA work I performed for **PG Original**, and it is
+> shared with the client's permission for portfolio purposes. It is not
+> affiliated with or maintained by PG Original. The local simulation uses
+> synthetic data only. Live checks are read-only: they never submit
+> credentials, contact messages, orders or reset requests, and they don't
+> bypass challenges. Passing mock tests don't certify production checkout,
+> payments or authentication.
 
 ---
 
-## 📝 License
+## License
 
 This project is licensed under the [MIT License](LICENSE).
 
