@@ -23,9 +23,10 @@ acknowledge reports within a week.
 - Application logs omit input values. Browser traces can contain cookies,
   typed values and request URLs, so live traces are never uploaded as CI
   artifacts and stay out of git (`test-results/`, `reports/`, `logs/`).
-- Dependencies are pinned with hashes and installed with `--require-hashes`.
-  GitHub Actions are pinned to full commit SHAs, workflows run with a
-  read-only token and don't persist checkout credentials.
-- The Security workflow audits locked dependencies for known
+- Dependencies are pinned to exact versions. GitHub Actions are pinned to
+  full commit SHAs, workflows run with a read-only token and don't persist
+  checkout credentials.
+- The Security workflow audits the pinned dependencies, including the
+  packages they pull in, for known
   vulnerabilities (pip-audit) and the workflows for insecure patterns
   (zizmor) on every pull request and weekly.
