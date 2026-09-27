@@ -6,7 +6,7 @@
   <img src="assets/pg_logo.png" alt="PG Original Logo" width="300"/>
   <br>
   <br>
-  <h2>Test automation framework built from my QA work on <a href="https://www.pgoriginal.com/">pgoriginal.com</a></h2>
+  <h2>Test automation framework built based on my work at <a href="https://www.pgoriginal.com/">pgoriginal.com</a></h2>
   <p><b>Python · Playwright · Pytest · Page Object Model</b></p>
 </div>
 
