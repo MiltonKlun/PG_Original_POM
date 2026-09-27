@@ -1,0 +1,157 @@
+{
+  "description": "Realistic storefront defects injected one at a time into a copy of the local simulation. Each 'find' snippet must occur exactly once in its file.",
+  "mutants": [
+    {
+      "id": "M01",
+      "description": "Search returns the whole catalog whenever any product matches",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "p.name.toLowerCase().includes(query.toLowerCase())",
+          "replace": "products.some(x => x.name.toLowerCase().includes(query.toLowerCase()))"
+        }
+      ],
+      "killed_by": ["test_search_filters_catalog"]
+    },
+    {
+      "id": "M02",
+      "description": "Cart subtotal ignores line quantity",
+      "file": "mock_site/app.js",
+      "edits": [
+        {"find": "sum + line.price * line.quantity, 0", "replace": "sum + line.price, 0"}
+      ],
+      "killed_by": ["test_cart_quantity"]
+    },
+    {
+      "id": "M03",
+      "description": "Adding the same variant again creates a duplicate line",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "if (existing) existing.quantity += quantity;",
+          "replace": "if (false) existing.quantity += quantity;"
+        }
+      ],
+      "killed_by": ["test_repeat_add_merges_line"]
+    },
+    {
+      "id": "M04",
+      "description": "Add to cart ignores the chosen quantity",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "else lines.push({id:product.id, name:product.name, variant, price:product.price, quantity});",
+          "replace": "else lines.push({id:product.id, name:product.name, variant, price:product.price, quantity: 1});"
+        }
+      ],
+      "killed_by": ["test_add_with_quantity"]
+    },
+    {
+      "id": "M05",
+      "description": "Cart is kept in memory only and lost on navigation",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "const cart = () => JSON.parse(localStorage.getItem(cartKey) || '[]');",
+          "replace": "let memoryCart = []; const cart = () => JSON.parse(JSON.stringify(memoryCart));"
+        },
+        {
+          "find": "function saveCart(lines) { localStorage.setItem(cartKey, JSON.stringify(lines)); renderCart(); }",
+          "replace": "function saveCart(lines) { memoryCart = lines; renderCart(); }"
+        }
+      ],
+      "killed_by": ["test_cart_persists_across_navigation"]
+    },
+    {
+      "id": "M06",
+      "description": "Removing one line empties the whole cart",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "saveCart(cart().filter((_, i) => i !== Number(button.dataset.removeIndex)))",
+          "replace": "saveCart([])"
+        }
+      ],
+      "killed_by": ["test_remove_one_of_two_lines"]
+    },
+    {
+      "id": "M07",
+      "description": "Cart line shows the unit price instead of the line total",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "<p class=\"js-cart-item-subtotal\">${money(line.price * line.quantity)}</p>",
+          "replace": "<p class=\"js-cart-item-subtotal\">${money(line.price)}</p>"
+        }
+      ],
+      "killed_by": ["test_cart_quantity", "test_add_with_quantity"]
+    },
+    {
+      "id": "M08",
+      "description": "Only the first selected option is stored as the cart variant",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": ".map(el=>el.dataset.option).join(' / ')",
+          "replace": ".map(el=>el.dataset.option).slice(0, 1).join(' / ')"
+        }
+      ],
+      "killed_by": ["test_add_to_cart_flow"]
+    },
+    {
+      "id": "M09",
+      "description": "Color filter is checked but results are not filtered",
+      "file": "mock_site/app.js",
+      "edits": [
+        {"find": "(!color || p.colors.includes(color))", "replace": "(!color || true)"}
+      ],
+      "killed_by": ["test_filter_color_and_clear"]
+    },
+    {
+      "id": "M10",
+      "description": "Sold-out product can be added to the cart",
+      "file": "mock_site/app.js",
+      "edits": [
+        {"find": " ${product.available?'':'disabled'}>", "replace": ">"},
+        {"find": "if (!product.available) return;", "replace": ""}
+      ],
+      "killed_by": ["test_unavailable_product"]
+    },
+    {
+      "id": "M11",
+      "description": "Empty-cart message stays visible after adding a product",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "document.querySelector('#modal-cart .alert-info').hidden = lines.length > 0;",
+          "replace": "document.querySelector('#modal-cart .alert-info').hidden = false;"
+        }
+      ],
+      "killed_by": ["test_add_to_cart_flow"]
+    },
+    {
+      "id": "M12",
+      "description": "Editing a quantity in the cart is not saved",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "const lines = cart(); lines[Number(input.dataset.cartIndex)].quantity = value; saveCart(lines);",
+          "replace": "renderCart();"
+        }
+      ],
+      "killed_by": ["test_cart_quantity"]
+    },
+    {
+      "id": "M13",
+      "description": "Product page heading always shows the first catalog product",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "main.innerHTML = productHTML(product);",
+          "replace": "main.innerHTML = productHTML(product).replace(/<h1>.*?<\\/h1>/, '<h1>' + escapeHTML(products[0].name) + '</h1>');"
+        }
+      ],
+      "killed_by": ["test_cart_without_variants", "test_unavailable_product"]
+    }
+  ]
+}

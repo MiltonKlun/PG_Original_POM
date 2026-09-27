@@ -122,16 +122,18 @@ flowchart LR
 
 ## Test coverage
 
-**62 cases:** 25 browser scenarios and 37 offline framework checks
-(settings validation, data loading, money parsing, server lifecycle).
+**99 cases:** 32 browser scenarios and 67 offline framework checks
+(settings validation, data loading, money parsing and formatting, server
+lifecycle, mutation harness). A mutation check injects 13 realistic storefront
+defects into the simulation; the suite currently detects all 13.
 
 | Area | Scenarios | Target |
 |---|---|---|
 | Home & navigation | Title, header/footer, shop link; menu → shop → product | Mock + live / mock |
-| Search | Open, focus and close; matching results; empty-result state | Mock + live |
+| Search | Open, focus and close; matching results; empty-result state; exact result sets (3 datasets) | Mock + live / mock |
 | Shop | Color filter apply/clear; sold-out product can't be added | Mock |
 | Product details | Clicked product == page heading; current price is a valid ARS amount | Mock + live |
-| Cart | Add with size/color, quantity update, removal, empty start, product without variants | Mock |
+| Cart | Add with size/color, add with quantity, repeat add merges lines, quantity update, removal of one or all lines, persistence across pages, empty start, product without variants | Mock |
 | Authentication | Invalid credentials (2 datasets); native validation (3 cases); reset-password navigation | Mock / mock / mock + live |
 | Contact | Seeded, accented and whitespace inputs; malformed emails; disabled submit | Mock + live / mock |
 
@@ -254,6 +256,7 @@ environment problems apart.
 | [Mock CI](.github/workflows/ci.yml) | PR / push to `main` | Black, Flake8 and framework checks on Ubuntu + Windows; all UI tests on Chromium against the Docker-served simulation | Yes |
 | [Browser compatibility](.github/workflows/compatibility.yml) | Weekly / manual | Full UI suite on Firefox and WebKit; Pixel 7 smoke | No |
 | [Live read-only smoke](.github/workflows/live-smoke.yml) | Weekly / manual | Three `smoke and live_safe` checks on pgoriginal.com | No |
+| [Mutation score](.github/workflows/mutation.yml) | Weekly / manual / PRs touching tests or the simulation | Injects each catalogued defect and fails if fewer than 90% are detected | No |
 
 Every job uploads its reports (and, for mock failures, traces, screenshots,
 videos and server logs) as artifacts for 14 days. The job summary refuses to

@@ -19,7 +19,12 @@
       "size": "M",
       "color": "Negro",
       "variant": "M / Negro",
-      "price": 2900000
+      "price": 2900000,
+      "alternate": {
+        "size": "S",
+        "color": "Negro",
+        "variant": "S / Negro"
+      }
     },
     "cap": {
       "name": "QA Gorra",
@@ -41,6 +46,31 @@
       "name": "  QA Example  ",
       "email": "qa@example.com",
       "message": "  text with spaces  "
+    }
+  ],
+  "search_cases": [
+    {
+      "id": "partial-lowercase",
+      "term": "remera",
+      "expected": [
+        "QA Remera"
+      ]
+    },
+    {
+      "id": "exact-name",
+      "term": "QA Gorra",
+      "expected": [
+        "QA Gorra"
+      ]
+    },
+    {
+      "id": "shared-prefix",
+      "term": "qa",
+      "expected": [
+        "QA Agotado",
+        "QA Gorra",
+        "QA Remera"
+      ]
     }
   ]
 }
