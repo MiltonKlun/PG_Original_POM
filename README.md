@@ -122,7 +122,7 @@ flowchart LR
 
 ## Test coverage
 
-**115 cases:** 43 browser scenarios and 72 offline framework checks
+**122 cases:** 43 browser scenarios and 79 offline framework checks
 (settings validation, data loading, money parsing and formatting, server
 lifecycle, mutation harness). A mutation check injects 19 realistic storefront
 defects into the simulation; the suite currently detects all 19.
@@ -258,6 +258,7 @@ environment problems apart.
 | [Browser compatibility](.github/workflows/compatibility.yml) | Weekly / manual | Full UI suite on Firefox and WebKit; Pixel 7 smoke | No |
 | [Live read-only smoke](.github/workflows/live-smoke.yml) | Weekly / manual | 11 read-only smoke and locator-contract checks on pgoriginal.com | No |
 | [Mutation score](.github/workflows/mutation.yml) | Weekly / manual / PRs touching tests or the simulation | Injects each catalogued defect and fails if fewer than 90% are detected | No |
+| [Security](.github/workflows/security.yml) | PR / push to `main` / weekly / manual | Known-vulnerability audit of the hashed dependency locks (pip-audit) and workflow security analysis (zizmor) | No |
 
 Every job uploads its reports (and, for mock failures, traces, screenshots,
 videos and server logs) as artifacts for 14 days. The job summary refuses to

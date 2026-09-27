@@ -1,0 +1,4 @@
+# CI-only security tooling (Security workflow). Regenerate with uv 0.11.29:
+# uv pip compile requirements-security.in --universal --python-version 3.12 --generate-hashes -o requirements-security.txt
+pip-audit==2.10.1
+zizmor==1.30.1

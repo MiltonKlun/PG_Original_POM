@@ -1,7 +1,14 @@
 from urllib.request import urlopen
 from urllib.error import HTTPError
 import pytest
-from scripts.serve_mock import MockServer, verify_mock, mock_target
+from scripts.serve_mock import (
+    PUBLIC_DIRS,
+    PUBLIC_FILES,
+    ROOT,
+    MockServer,
+    mock_target,
+    verify_mock,
+)
 from config.settings import Settings
 
 pytestmark = pytest.mark.framework
@@ -52,3 +59,33 @@ def test_cleanup_on_failure():
         with MockServer(port=0) as server:
             raise ValueError("test failed")
     assert not server.thread.is_alive()
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/CONTRACT.md",
+        "/Dockerfile",
+        "/nginx.conf",
+        "/.dockerignore",
+        "/account/",
+        "/%2e%2e/conftest.py",
+    ],
+)
+def test_repository_files_and_listings_not_served(path):
+    with MockServer(port=0) as server:
+        with pytest.raises(HTTPError) as error:
+            urlopen(server.url + path)
+        assert error.value.code == 404
+
+
+def test_public_surface_matches_docker_image():
+    # Both serving modes must expose the same files: parse the image's COPY lines.
+    files, dirs = set(), set()
+    for line in (ROOT / "Dockerfile").read_text(encoding="utf-8").splitlines():
+        words = line.split()
+        if words[:1] == ["COPY"] and not words[-1].startswith("/"):
+            for source in words[1:-1]:
+                (dirs if source.endswith("/") else files).add(source.rstrip("/"))
+    assert files == PUBLIC_FILES
+    assert dirs == PUBLIC_DIRS

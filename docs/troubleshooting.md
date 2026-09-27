@@ -79,6 +79,17 @@ synthetic evidence or clearly labeled sanitized excerpts. Public workflows
 must not upload authenticated live traces or client credentials. This suite
 does not use real accounts.
 
+Traces from **live** runs contain the store's session cookies and request
+headers. They're never uploaded by CI, but local ones accumulate under
+`test-results/`. After investigating a live failure, delete its trace:
+
+```text
+# PowerShell
+Remove-Item -Recurse test-results\<live-run-id>
+# POSIX
+rm -rf test-results/<live-run-id>
+```
+
 The reviewed [cart error screenshot](evidence/mock-cart-error.png) is from a
 deliberate defect in a disposable local copy: the UI said “Agregado al carrito”
 but the cart remained empty. The setup assertion detected the missing item.
