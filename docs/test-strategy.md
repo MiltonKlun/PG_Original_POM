@@ -57,21 +57,26 @@ P0 = revenue or order correctness, P1 = discovery and forms.
 | SEARCH | P1 | Search opens, input is visible and focused, close hides it | `test_smoke.py::test_search_modal_opens` | Mock + live |
 | MENU | P1 | Hamburger menu → shop → product | `test_navigation.py::test_menu_reaches_product` | Mock |
 | RESULTS | P1 | Known term returns the product; impossible term shows empty state and no cards | `test_search.py::test_search_results`, `test_search_empty` | Mock + live |
+| RESULT-SET | P1 | Partial lowercase, exact and shared-prefix terms return exactly the expected products, and nothing else | `test_search.py::test_search_filters_catalog` (3 datasets) | Mock |
 | FILTER | P1 | Color filter checks its control, results offer that color, clearing restores the list | `test_shop.py::test_filter_color_and_clear` | Mock |
 | PDP | P0 | Selected card name equals PDP heading; current price parses to a positive ARS amount; add control enabled | `test_shop.py::test_shop_product_details` | Mock + live |
-| CART-ADD | P0 | Exact product, variant, quantity, line amount and subtotal | `test_cart.py::test_add_to_cart_flow` | Mock |
+| CART-ADD | P0 | Exact product, variant, quantity, line amount and subtotal; empty-cart message hidden | `test_cart.py::test_add_to_cart_flow` | Mock |
+| CART-ADD-QTY | P0 | Adding quantity 2 from the product page creates one line with quantity 2 and doubled amounts | `test_cart.py::test_add_with_quantity` | Mock |
+| CART-MERGE | P0 | Adding the same variant again increases its quantity; another variant becomes a separate line | `test_cart.py::test_repeat_add_merges_line` | Mock |
 | CART-QTY | P0 | Quantity 1 → 2 doubles line amount and subtotal exactly | `test_cart.py::test_cart_quantity` | Mock |
 | CART-REMOVE | P0 | Removing the only line restores the empty state and zero subtotal | `test_cart.py::test_cart_remove` | Mock |
+| CART-REMOVE-ONE | P0 | Removing one of two lines keeps the other line and recomputes the subtotal | `test_cart.py::test_remove_one_of_two_lines` | Mock |
+| CART-PERSIST | P0 | Cart line, quantity and subtotal survive navigation to another page | `test_cart.py::test_cart_persists_across_navigation` | Mock |
 | CART-EMPTY | P0 | A new browser context starts with an empty cart | `test_cart.py::test_cart_starts_empty` | Mock |
-| NO-VARIANT | P0 | Product without variants can be added at its price | `test_cart.py::test_cart_without_variants` | Mock |
-| SOLD-OUT | P0 | Unavailable product shows "Sin stock", add is disabled, cart stays empty | `test_shop.py::test_unavailable_product` | Mock |
+| NO-VARIANT | P0 | Product page shows the selected product; product without variants can be added at its price | `test_cart.py::test_cart_without_variants` | Mock |
+| SOLD-OUT | P0 | Product page shows the selected product; "Sin stock" shown, add disabled, cart stays empty | `test_shop.py::test_unavailable_product` | Mock |
 | AUTH-INVALID | P1 | Named invalid credentials are rejected and the user stays on login | `test_auth.py::test_login_failure` (2 datasets) | Mock |
 | AUTH-NATIVE | P1 | Malformed/missing email and missing password are blocked client-side | `test_auth.py::test_login_native_validation` (3 cases) | Mock |
 | RESET | P1 | "Olvidaste" link reaches the reset page (optional trailing slash) with its heading | `test_auth.py::test_forgot_password_link` | Mock + live |
 | CONTACT | P1 | Fields keep seeded, accented and whitespace inputs; malformed emails are invalid; submit is never clicked | `test_contact.py::test_contact_*` (6 cases) | Fill: mock + live; disabled submit: mock |
-| MONEY | P0 | ARS display parsing to integer minor units; ambiguous or installment text rejected | `framework/test_money.py` (15 cases) | Offline |
+| MONEY | P0 | ARS display parsing to integer minor units; ambiguous or installment text rejected; formatting round-trips | `framework/test_money.py` (26 cases) | Offline |
 
-Totals: 62 collected cases, of which 25 are UI and 37 are offline framework
+Totals: 99 collected cases, of which 32 are UI and 67 are offline framework
 checks. 11 UI cases are `live_safe`; the weekly live smoke runs the 3 that
 are also `smoke`.
 
@@ -85,7 +90,8 @@ are also `smoke`.
 - Generated contact data uses Faker `es_AR`, seeded from `--seed` plus the test
   node ID. Values repeat per case and don't depend on execution order. All
   generated emails use `example.com`.
-- Money is compared in integer minor units, never binary floats.
+- Money is compared in integer minor units, never binary floats. Expected
+  display text is derived from test data with `format_ars`, not hard-coded.
 
 ## Assertion policy
 
@@ -106,21 +112,48 @@ are also `smoke`.
 | Mock CI | PR / push to `main` | Static checks + framework tests (Ubuntu, Windows); all UI tests, Chromium against Docker/nginx | Yes (required checks) |
 | Compatibility | Weekly / manual | Full mock UI on Firefox and WebKit; Chromium Pixel 7 emulation smoke | No |
 | Live smoke | Weekly / manual | `smoke and live_safe`, Chromium, serial, no retries | No; a failure stays visible |
+| Mutation score | Weekly / manual / PRs touching tests or the mock | All mutants against the mock UI suite; fails below 90% | No |
 
 A change is ready when the required checks are green with no unexplained
 skips, xfails or reruns. Sensitivity was verified by deliberately breaking
 cart insertion, product identity and an expected price: each made the
 corresponding test fail, with trace, screenshot and video retained.
 
+## Test effectiveness (mutation testing)
+
+A passing suite only matters if it fails when the product is wrong. The
+catalog in [`tests/mutation/catalog.json`](../tests/mutation/catalog.json)
+lists realistic storefront defects: search not filtering, repeat adds
+duplicating lines, quantity ignored, cart lost on navigation, wrong line
+removed, wrong totals, variant not recorded, filter not applied, sold-out
+product purchasable, stale empty-cart message, quantity edits not saved and
+the wrong product heading.
+
+`scripts/mutation_check.py` applies each defect to a disposable copy of the
+simulation, runs the UI suite, and counts the defect as detected only when
+tests fail. The unmodified copy must pass first, and runs that end in any
+other way (interrupted, no tests collected) are rejected rather than scored.
+A framework check fails when the storefront changes and a mutant no longer
+applies, so the catalog can't silently go stale.
+
+```text
+python scripts/mutation_check.py --min-score 90
+python scripts/mutation_check.py --only M05
+```
+
+| Date | Suite | Score |
+|---|---|---|
+| 2026-09-27 | Before adding the tests below | 46.2% (6 of 13) |
+| 2026-09-27 | With result-set, add-quantity, merge, persistence and partial-removal tests | 100% (13 of 13) |
+
+The weekly and pull-request workflow fails below 90%.
+
 ## Known gaps
 
-Assessed 2026-09-27 by injecting realistic defects into a copy of the mock:
-
-- Search doesn't assert that non-matching products are excluded.
-- No case adds a quantity above 1, adds the same variant twice, keeps the cart
-  across navigation, or removes one line out of several.
 - Live pricing varies by variant (e.g. one color on promotion, another at list
   price). The mock uses one price per product, and this isn't tested yet.
 - Some mock markup (cart close control, menu SHOP entry) differs from live and
   is being aligned; see the [site contract](site-contract.md).
+- Mutants cover the simulation's JavaScript only; defects in live-only
+  behavior are covered by the read-only checks, not by the mutation score.
 - No automated accessibility, visual or performance checks yet.

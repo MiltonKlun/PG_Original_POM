@@ -91,16 +91,26 @@ disposable copies I:
   artifacts uploaded. Reverting it returned CI to green; the change was never
   merged.
 
-A later review injected seven realistic defects into the mock. Two were
-caught; five were not (search not filtering, repeat adds, quantity on add,
-persistence across pages, targeted removal). Those gaps are listed in the
-[test strategy](test-strategy.md) and are the next tests to write.
+Hand-picked experiments prove a point once. To measure it continuously I
+built a small mutation-testing harness: a catalog of 13 realistic storefront
+defects, each applied to a disposable copy of the simulation while the UI
+suite runs. The first measurement was humbling: **6 of 13 (46%)** were
+detected. Search could return the whole catalog, a repeat add could create a
+duplicate line, the chosen quantity could be ignored, the cart could vanish on
+navigation, and "remove" could empty everything, all with a green suite.
+
+The fix wasn't more tests for their own sake but sharper oracles: exact
+result sets for search instead of "contains", quantity above 1, repeated adds,
+a navigation step after adding, and removal from a two-line cart. The score
+went to **13 of 13**, and a weekly workflow now fails if it drops below 90%.
+Details are in the [test strategy](test-strategy.md#test-effectiveness-mutation-testing).
 
 ## Results
 
 | Measure | Value |
 |---|---|
-| Collected cases | 62: 25 UI, 37 offline framework |
+| Collected cases | 99: 32 UI, 67 offline framework |
+| Mutation score | 13 of 13 injected defects detected (was 6 of 13) |
 | Mock run (Windows, Chromium) | ~15 s |
 | Live read-only cases | 11 (`live_safe`), 3 in the weekly smoke |
 | Browsers | Chromium, Firefox, WebKit on the mock; Pixel 7 emulation smoke |

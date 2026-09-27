@@ -31,7 +31,9 @@ def test_filter_color_and_clear(shop_page):
 @pytest.mark.mock_only
 def test_unavailable_product(shop_page, product_page, test_data):
     shop_page.open()
-    shop_page.open_product(test_data["shop"]["unavailable"]["name"])
+    item = test_data["shop"]["unavailable"]
+    shop_page.open_product(item["name"])
+    expect(product_page.heading).to_have_text(item["name"])
     expect(product_page.unavailable).to_be_visible()
     expect(product_page.add_button).to_be_disabled()
     product_page.cart.open()

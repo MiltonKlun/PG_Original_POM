@@ -31,9 +31,23 @@ def load_data(path: Path = DATA_PATH) -> dict:
             price = data["shop"][key]["price"]
             if type(price) is not int or price <= 0:
                 raise ValueError("Price must be positive integer minor units")
-        for key in ("size", "color", "variant"):
-            if not isinstance(data["shop"]["shirt"][key], str):
-                raise ValueError("Variant fields must be strings")
+        shirt = data["shop"]["shirt"]
+        for variant in (shirt, shirt["alternate"]):
+            for key in ("size", "color", "variant"):
+                if not isinstance(variant[key], str):
+                    raise ValueError("Variant fields must be strings")
+        if shirt["alternate"]["variant"] == shirt["variant"]:
+            raise ValueError("Alternate variant must differ from the default")
+        search_ids = set()
+        for case in data["search_cases"]:
+            expected = case["expected"]
+            if not (isinstance(case["term"], str) and case["term"].strip()):
+                raise ValueError("Search term must be a nonempty string")
+            if not expected or not all(isinstance(n, str) for n in expected):
+                raise ValueError("Expected search results must be product names")
+            if case["id"] in search_ids:
+                raise ValueError("Case IDs must be unique")
+            search_ids.add(case["id"])
         return data
     except (OSError, ValueError, KeyError, TypeError) as exc:
         raise ValueError(f"Invalid test data in {path}: {exc}") from exc
