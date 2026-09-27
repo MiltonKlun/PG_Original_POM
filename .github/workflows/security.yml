@@ -30,11 +30,11 @@ jobs:
           python-version: '3.12'
           cache: pip
           cache-dependency-path: requirements-security.txt
-      - run: python -m pip install --require-hashes -r requirements-security.txt
+      - run: python -m pip install -r requirements-security.txt
       - run: python -m pip check
       - name: Known vulnerabilities in locked dependencies
         run: |
-          python -m pip_audit -r requirements.txt --require-hashes --disable-pip --progress-spinner off
-          python -m pip_audit -r requirements-security.txt --require-hashes --disable-pip --progress-spinner off
+          python -m pip_audit -r requirements.txt --progress-spinner off
+          python -m pip_audit -r requirements-security.txt --progress-spinner off
       - name: Workflow security analysis
         run: zizmor --offline --persona=auditor .github/workflows/

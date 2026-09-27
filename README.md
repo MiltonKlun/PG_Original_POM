@@ -64,7 +64,7 @@
 | **Data-driven testing** | Named datasets in JSON drive parametrized auth and contact cases; seeded Faker (`es_AR`) makes generated data reproducible per test. |
 | **Correct money handling** | ARS prices (`$29.000,00`) parsed into integer minor units with a strict parser that rejects instalment and ambiguous text. |
 | **Evidence and reporting** | Per-run HTML, JUnit and JSON reports tagged with target, browser, seed and git revision; trace, screenshot and video kept on failure. |
-| **CI/CD** | Required checks on Ubuntu and Windows, Docker-served mock UI tests, weekly cross-browser and live read-only runs, SHA-pinned actions, hash-locked dependencies. |
+| **CI/CD** | Required checks on Ubuntu and Windows, Docker-served mock UI tests, weekly cross-browser and live read-only runs, SHA-pinned actions, pinned dependencies. |
 
 ## How the simulation relates to the real store
 
@@ -163,10 +163,10 @@ Activate the environment:
 source venv/bin/activate
 ```
 
-Install the hash-locked dependencies and Chromium:
+Install the pinned dependencies and Chromium:
 
 ```bash
-python -m pip install --require-hashes -r requirements.txt
+python -m pip install -r requirements.txt
 python -m pip check
 python -m playwright install chromium
 ```
@@ -258,7 +258,7 @@ environment problems apart.
 | [Browser compatibility](.github/workflows/compatibility.yml) | Weekly / manual | Full UI suite on Firefox and WebKit; Pixel 7 smoke | No |
 | [Live read-only smoke](.github/workflows/live-smoke.yml) | Weekly / manual | 11 read-only smoke and locator-contract checks on pgoriginal.com | No |
 | [Mutation score](.github/workflows/mutation.yml) | Weekly / manual / PRs touching tests or the simulation | Injects each catalogued defect and fails if fewer than 90% are detected | No |
-| [Security](.github/workflows/security.yml) | PR / push to `main` / weekly / manual | Known-vulnerability audit of the hashed dependency locks (pip-audit) and workflow security analysis (zizmor) | No |
+| [Security](.github/workflows/security.yml) | PR / push to `main` / weekly / manual | Known-vulnerability audit of the pinned dependencies (pip-audit) and workflow security analysis (zizmor) | No |
 
 Every job uploads its reports (and, for mock failures, traces, screenshots,
 videos and server logs) as artifacts for 14 days. The job summary refuses to

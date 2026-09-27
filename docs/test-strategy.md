@@ -120,7 +120,7 @@ are also `smoke` or `contract`.
 | Compatibility | Weekly / manual | Full mock UI on Firefox and WebKit; Chromium Pixel 7 emulation smoke | No |
 | Live smoke | Weekly / manual | `(smoke or contract) and live_safe`, Chromium, serial, no retries | No; a failure stays visible |
 | Mutation score | Weekly / manual / PRs touching tests or the mock | All mutants against the mock UI suite; fails below 90% | No |
-| Security | PR / push to `main` / weekly / manual | pip-audit on both hashed locks; zizmor (auditor level) on all workflows | No |
+| Security | PR / push to `main` / weekly / manual | pip-audit on both pinned requirement files, including resolved sub-dependencies; zizmor (auditor level) on all workflows | No |
 
 A change is ready when the required checks are green with no unexplained
 skips, xfails or reruns. Sensitivity was verified by deliberately breaking
