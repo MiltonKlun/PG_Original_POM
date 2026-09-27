@@ -9,13 +9,16 @@ No external assets, analytics, authentication, email or payment services exist.
 |---|---|---|
 | `/` | Brand/title, header/footer; SHOP link opens products | Home / HOME |
 | Every page | Buscador opens/focuses `#nav-search`; close hides it; form GET `/search/?q=...` | Navbar, SearchModal / SEARCH |
-| `/productos/` | Three synthetic cards, uniquely named `.item-link`/`.item-name` | Shop / PDP |
+| `/productos/` | Five synthetic products, four per page; uniquely named `.item-link`/`.item-name`; card `data-variants` carries per-variant `optionN`, `price_number_raw` and compare-at values | Shop / PDP |
+| Load more | `.js-load-more` "Mostrar más productos" appends the next page without repeats, updates `?mpage=N` and hides when everything is shown | Shop / pagination |
 | `/search/` | Case-insensitive name substring; unknown query displays `No encontramos nada para` and no cards | Shop / search results |
-| `/productos/?Color=Negro` | Visible color label toggles checked state, results include only products offering Negro; clear removes query and restores all cards | Shop / filter |
-| `/productos/qa-remera/` | QA Remera, 29,000.00 ARS, sizes S/M, colors Negro/Blanco; selected variant anchors mirror observed class/title | Product / CART-ADD |
+| `/productos/?Color=…`, `?Talle=…` | Visible Color and Talle labels (`data-filter-name`/`data-filter-value`, text with result count) toggle checked state; results include only products offering that value; `Borrar filtros` restores the first page | Shop / filter |
+| `/productos/qa-remera/` | QA Remera, sizes S/M, colors Negro/Blanco. Negro 29,000 ARS with compare-at 39,000; Blanco 39,000 without compare-at. `#price_display` (`data-product-price`) and `#compare_price_display` follow the selected variant | Product / CART-ADD / pricing |
 | `/productos/qa-gorra/` | QA Gorra, 15,000.00 ARS, no variants, available | Product / no-variant |
-| `/productos/qa-agotado/` | QA Agotado, 12,000.00 ARS; disabled add control and Sin stock text | Product / unavailable |
-| Every page | `#modal-cart` initially closed; header opens empty state or stored lines | CartDrawer / cart |
+| `/productos/qa-agotado/` | QA Agotado, 12,000 ARS; disabled add control and Sin stock text | Product / unavailable |
+| `/productos/pg-buzo/`, `/productos/pg-gorro/` | PG Buzo (sizes M/L, Gris, 45,000) and PG Gorro (Gris only, 18,000); second page of the listing | Pagination / filters |
+| Every page | `#modal-cart` initially closed; header opens empty state or stored lines; closes through an icon-only `a.js-modal-close.modal-close`, as on the live store | CartDrawer / cart |
+| Every page | Header menu opens `#nav-hamburger`; `SHOP` is a `.js-toggle-menu-panel` toggle (`href="#"`, plus a hidden duplicate) opening a panel with `Ver todos los productos` | Navbar / MENU |
 | `/account/login/` | Required email/password; valid-format invalid credentials show `Credenciales incorrectas`; no session created | Login / AUTH-INVALID |
 | `/account/reset/` | CAMBIAR CONTRASEÑA heading; email and disabled send button; never sends mail | Login / RESET |
 | `/contacto/` | Name/email/message retain values; native email type validation; submit stays disabled, mirroring observed challenged state | Contact / CONTACT-FILL/VALIDATION |
@@ -25,7 +28,8 @@ No external assets, analytics, authentication, email or payment services exist.
 ## Simulation-only rules
 
 Cart additions persist in localStorage per browser context. Identity is product
-ID + selected size/color; repeated identical additions increase quantity.
+ID + selected size/color; repeated identical additions increase quantity. A
+line's unit price is the selected variant's price.
 Quantity changes update line amount and subtotal in integer minor units;
 removing the sole line restores empty state and zero subtotal. No discounts,
 stock reservations, shipping, checkout, tax or currency conversion is modeled.
@@ -37,6 +41,9 @@ Native malformed-email validation is shared HTML behavior. Empty contact
 fields are not modeled as HTML-required because the observed site does not
 mark them required. Contact enablement/server error behavior is not invented.
 Login error copy is synthetic and carries no production assertion.
+
+Listing and product prices use the short storefront format (`$29.000`); cart
+amounts keep two decimals (`$29.000,00`).
 
 `catalog.json` drives the mock; tests must use independent expected fixture
 values, never import this file to derive the assertions being checked.

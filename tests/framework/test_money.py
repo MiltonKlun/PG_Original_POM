@@ -58,3 +58,12 @@ def test_format_round_trips(minor_units, display):
 def test_format_rejects_non_minor_units(value):
     with pytest.raises(ValueError):
         format_ars(value)
+
+
+@pytest.mark.parametrize(
+    "minor_units,display",
+    [(2900000, "$29.000"), (0, "$0"), (2396694, "$23.966,94"), (950, "$9,50")],
+)
+def test_short_format_omits_only_zero_cents(minor_units, display):
+    assert format_ars(minor_units, short=True) == display
+    assert ars_minor_units(display) == minor_units

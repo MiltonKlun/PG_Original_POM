@@ -1,39 +1,54 @@
-[
-  {
-    "id": "shirt",
-    "slug": "qa-remera",
-    "name": "QA Remera",
-    "price": 2900000,
-    "sizes": [
-      "S",
-      "M"
-    ],
-    "colors": [
-      "Negro",
-      "Blanco"
-    ],
-    "available": true
-  },
-  {
-    "id": "cap",
-    "slug": "qa-gorra",
-    "name": "QA Gorra",
-    "price": 1500000,
-    "sizes": [],
-    "colors": [],
-    "available": true
-  },
-  {
-    "id": "soldout",
-    "slug": "qa-agotado",
-    "name": "QA Agotado",
-    "price": 1200000,
-    "sizes": [
-      "M"
-    ],
-    "colors": [
-      "Blanco"
-    ],
-    "available": false
-  }
-]
+{
+  "page_size": 4,
+  "products": [
+    {
+      "id": "shirt",
+      "slug": "qa-remera",
+      "name": "QA Remera",
+      "available": true,
+      "variants": [
+        {"size": "S", "color": "Negro", "price": 2900000, "compare_at": 3900000},
+        {"size": "M", "color": "Negro", "price": 2900000, "compare_at": 3900000},
+        {"size": "S", "color": "Blanco", "price": 3900000, "compare_at": null},
+        {"size": "M", "color": "Blanco", "price": 3900000, "compare_at": null}
+      ]
+    },
+    {
+      "id": "cap",
+      "slug": "qa-gorra",
+      "name": "QA Gorra",
+      "available": true,
+      "variants": [
+        {"size": null, "color": null, "price": 1500000, "compare_at": null}
+      ]
+    },
+    {
+      "id": "soldout",
+      "slug": "qa-agotado",
+      "name": "QA Agotado",
+      "available": false,
+      "variants": [
+        {"size": "M", "color": "Blanco", "price": 1200000, "compare_at": null}
+      ]
+    },
+    {
+      "id": "hoodie",
+      "slug": "pg-buzo",
+      "name": "PG Buzo",
+      "available": true,
+      "variants": [
+        {"size": "M", "color": "Gris", "price": 4500000, "compare_at": null},
+        {"size": "L", "color": "Gris", "price": 4500000, "compare_at": null}
+      ]
+    },
+    {
+      "id": "beanie",
+      "slug": "pg-gorro",
+      "name": "PG Gorro",
+      "available": true,
+      "variants": [
+        {"size": null, "color": "Gris", "price": 1800000, "compare_at": null}
+      ]
+    }
+  ]
+}

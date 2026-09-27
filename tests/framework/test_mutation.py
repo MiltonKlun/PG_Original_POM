@@ -40,6 +40,11 @@ def test_invalid_edits_rejected(text, edit):
         apply_edits(text, (edit,))
 
 
+def test_multiline_snippet_matches_crlf_checkout():
+    edit = Edit("a();\n  b();", "a();")
+    assert apply_edits("x\r\na();\r\n  b();\r\n", (edit,)) == "x\na();\n"
+
+
 def test_edits_apply_in_order():
     assert apply_edits("abc", (Edit("a", "x"), Edit("xb", "y"))) == "yc"
 

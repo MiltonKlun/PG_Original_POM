@@ -1,6 +1,13 @@
-﻿"use strict";
-const money = cents => '$' + new Intl.NumberFormat('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(cents / 100);
+"use strict";
+// Cart amounts keep two decimals (live cart markup is unverified); listing and
+// product prices use the storefront's short form, e.g. $29.000.
+const format = (cents, digits) => '$' + new Intl.NumberFormat('es-AR', {minimumFractionDigits: digits, maximumFractionDigits: 2}).format(cents / 100);
+const money = cents => format(cents, 2);
+const moneyShort = cents => format(cents, cents % 100 ? 2 : 0);
 const escapeHTML = text => String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const unique = values => [...new Set(values.filter(Boolean))];
+const sizesOf = product => unique(product.variants.map(v => v.size));
+const colorsOf = product => unique(product.variants.map(v => v.color));
 const cartKey = 'pg-qa-cart';
 const cart = () => JSON.parse(localStorage.getItem(cartKey) || '[]');
 function saveCart(lines) { localStorage.setItem(cartKey, JSON.stringify(lines)); renderCart(); }
@@ -16,17 +23,47 @@ function renderCart() {
   }));
   document.querySelectorAll('[data-remove-index]').forEach(button => button.addEventListener('click', () => saveCart(cart().filter((_, i) => i !== Number(button.dataset.removeIndex)))));
 }
+// Mirrors the public per-variant card metadata: option0/option1 in variant order.
+function variantData(product) {
+  return product.variants.map(v => {
+    const data = {price_short: moneyShort(v.price), price_number_raw: v.price, compare_at_price_short: v.compare_at ? moneyShort(v.compare_at) : null, compare_at_price_number_raw: v.compare_at, available: product.available};
+    [v.size, v.color].filter(Boolean).forEach((value, i) => { data['option' + i] = value; });
+    return data;
+  });
+}
 function cardHTML(product) {
-  const variants = product.colors.map(color => ({option1: color}));
-  return `<article class="item-product"><div data-variants="${escapeHTML(JSON.stringify(variants))}"><a class="item-link" href="/productos/${product.slug}/" aria-label="${escapeHTML(product.name)}"><div class="product-art" aria-hidden="true">PG</div><h2 class="item-name">${escapeHTML(product.name)}</h2><p>${money(product.price)}</p></a>${product.available ? '' : '<p>Sin stock</p>'}</div></article>`;
+  const [first] = product.variants;
+  const compare = first.compare_at ? `<span class="price-compare">${moneyShort(first.compare_at)}</span>` : '';
+  return `<article class="item-product"><div class="js-product-container" data-variants="${escapeHTML(JSON.stringify(variantData(product)))}"><a class="item-link" href="/productos/${product.slug}/" aria-label="${escapeHTML(product.name)}"><div class="product-art" aria-hidden="true">PG</div><h2 class="item-name">${escapeHTML(product.name)}</h2><p><span class="js-price-display">${moneyShort(first.price)}</span> ${compare}</p></a>${product.available ? '' : '<p>Sin stock</p>'}</div></article>`;
+}
+function optionsHTML(kind, label, values) {
+  if (!values.length) return '';
+  return `<div><p>${label}</p>${values.map((v, i) => `<a class="js-insta-variant ${i===0?'selected':''}" title="${v}" data-option="${v}" data-kind="${kind}">${v}</a>`).join('')}</div>`;
 }
 function productHTML(product) {
-  return `<h1>${escapeHTML(product.name)}</h1><div id="price_display" class="price">${money(product.price)}</div><form id="product_form"><div>${product.sizes.length ? '<p>Talle</p>' : ''}${product.sizes.map((v,i) => `<a class="js-insta-variant ${i===0?'selected':''}" title="${v}" data-option="${v}" data-kind="size">${v}</a>`).join('')}</div><div>${product.colors.length ? '<p>Color</p>' : ''}${product.colors.map((v,i) => `<a class="js-insta-variant ${i===0?'selected':''}" title="${v}" data-option="${v}" data-kind="color">${v}</a>`).join('')}</div><label>Cantidad<input name="quantity" type="number" value="1" min="1"></label><input class="js-addtocart" type="submit" value="Agregar al carrito" ${product.available?'':'disabled'}>${product.available?'':'<p>Sin stock</p>'}</form>`;
+  return `<h1>${escapeHTML(product.name)}</h1><div id="price_display" class="js-price-display price"></div><div id="compare_price_display" class="js-compare-price-display price-compare"></div><form id="product_form">${optionsHTML('size', 'Talle', sizesOf(product))}${optionsHTML('color', 'Color', colorsOf(product))}<label>Cantidad<input name="quantity" type="number" value="1" min="1"></label><input class="js-addtocart" type="submit" value="Agregar al carrito" ${product.available?'':'disabled'}>${product.available?'':'<p>Sin stock</p>'}</form>`;
+}
+function selectedVariant(product) {
+  const chosen = Object.fromEntries([...document.querySelectorAll('.js-insta-variant.selected')].map(el => [el.dataset.kind, el.dataset.option]));
+  return product.variants.find(v => (!v.size || v.size === chosen.size) && (!v.color || v.color === chosen.color));
+}
+function showPrice(product) {
+  const variant = selectedVariant(product);
+  const price = document.querySelector('#price_display');
+  const compare = document.querySelector('#compare_price_display');
+  price.textContent = moneyShort(variant.price);
+  price.dataset.productPrice = variant.price;
+  if (variant.compare_at) compare.textContent = moneyShort(variant.compare_at);
+  compare.style.display = variant.compare_at ? 'block' : 'none';
+}
+function filtersHTML(products, color, size) {
+  const labels = (name, values, valuesOf, active) => values.map(value => `<label class="js-filter-checkbox" data-filter-name="${name}" data-filter-value="${value}"><input type="checkbox" ${active===value?'checked':''}> ${value} (${products.filter(p => valuesOf(p).includes(value)).length})</label>`).join('');
+  return `<div class="filters">${labels('Color', unique(products.flatMap(colorsOf)), colorsOf, color)}${labels('Talle', unique(products.flatMap(sizesOf)), sizesOf, size)}<a href="/productos/" class="js-remove-all-filters-private">Borrar filtros</a></div>`;
 }
 async function initialize() {
   const response = await fetch('/catalog.json');
   if (!response.ok) throw new Error('Cannot load synthetic catalog');
-  const products = await response.json();
+  const {page_size: pageSize, products} = await response.json();
   const main = document.querySelector('main');
   const path = location.pathname.replace(/\/$/, '') || '/';
   const params = new URLSearchParams(location.search);
@@ -35,7 +72,9 @@ async function initialize() {
     if (panel.id === 'nav-search') panel.querySelector('input').focus();
   }));
   document.querySelector('#nav-search .js-modal-close').addEventListener('click', e => { e.preventDefault(); document.querySelector('#nav-search').hidden = true; });
-  document.querySelector('.cart-close').addEventListener('click', () => {document.querySelector('#modal-cart').hidden = true;});
+  document.querySelectorAll('#nav-hamburger .js-toggle-menu-panel').forEach(toggle => toggle.addEventListener('click', e => { e.preventDefault(); toggle.nextElementSibling.hidden = false; }));
+  document.querySelector('#nav-hamburger .js-toggle-menu-close').addEventListener('click', () => { document.querySelector('#nav-hamburger').hidden = true; });
+  document.querySelector('#modal-cart .modal-close').addEventListener('click', () => { document.querySelector('#modal-cart').hidden = true; });
   document.querySelector('.cookies').hidden = localStorage.getItem('pg-qa-consent') === 'yes';
   document.querySelector('.js-acknowledge-cookies').addEventListener('click', () => {localStorage.setItem('pg-qa-consent','yes');document.querySelector('.cookies').hidden = true;});
   if (path === '/') {
@@ -43,10 +82,25 @@ async function initialize() {
   } else if (path === '/productos' || path === '/search') {
     const query = params.get('q') || '';
     const color = params.get('Color');
-    const filtered = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) && (!color || p.colors.includes(color)));
-    main.innerHTML = `<h1>${path==='/search'?'Resultados de búsqueda':'Productos'}</h1>${path==='/productos'?`<label class="js-filter-checkbox" data-filter-name="Color" data-filter-value="Negro"><input type="checkbox" ${color==='Negro'?'checked':''}>Negro</label><a href="/productos/" class="js-remove-all-filters-private">Borrar filtros</a>`:''}<div class="grid">${filtered.map(cardHTML).join('')}</div>${filtered.length?'':`<p>No encontramos nada para "${escapeHTML(query)}"</p>`}`;
-    const filter = main.querySelector('.js-filter-checkbox input');
-    if (filter) filter.addEventListener('change', () => {location.href = filter.checked ? '/productos/?Color=Negro' : '/productos/';});
+    const size = params.get('Talle');
+    const filtered = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) && (!color || colorsOf(p).includes(color)) && (!size || sizesOf(p).includes(size)));
+    let shown = Math.min(filtered.length, pageSize * Math.max(1, Number(params.get('mpage')) || 1));
+    main.innerHTML = `<h1>${path==='/search'?'Resultados de búsqueda':'Productos'}</h1>${path==='/productos'?filtersHTML(products, color, size):''}<div class="grid">${filtered.slice(0, shown).map(cardHTML).join('')}</div>${filtered.length?'':`<p>No encontramos nada para "${escapeHTML(query)}"</p>`}<div class="js-load-more"><a class="btn">Mostrar más productos</a></div>`;
+    main.querySelectorAll('.js-filter-checkbox input').forEach(input => input.addEventListener('change', () => {
+      const label = input.closest('label');
+      location.href = input.checked ? `/productos/?${label.dataset.filterName}=${encodeURIComponent(label.dataset.filterValue)}` : '/productos/';
+    }));
+    const more = main.querySelector('.js-load-more');
+    const updateMore = () => { more.style.display = shown < filtered.length ? 'block' : 'none'; };
+    updateMore();
+    more.querySelector('a').addEventListener('click', () => {
+      const next = filtered.slice(shown, shown + pageSize);
+      main.querySelector('.grid').insertAdjacentHTML('beforeend', next.map(cardHTML).join(''));
+      shown += next.length;
+      params.set('mpage', String(Math.ceil(shown / pageSize)));
+      history.replaceState(null, '', `${location.pathname}?${params}`);
+      updateMore();
+    });
   } else if (path.startsWith('/productos/')) {
     const product = products.find(p => path === '/productos/' + p.slug);
     if (!product) throw new Error('Unknown fixture product');
@@ -56,9 +110,11 @@ async function initialize() {
     placeholder.className = 'js-addtocart js-addtocart-placeholder disabled';
     placeholder.hidden = true;
     document.querySelector('#product_form').append(placeholder);
+    showPrice(product);
     document.querySelectorAll('.js-insta-variant').forEach(option => option.addEventListener('click', () => {
       document.querySelectorAll(`[data-kind="${option.dataset.kind}"]`).forEach(el=>el.classList.remove('selected'));
       option.classList.add('selected');
+      showPrice(product);
     }));
     document.querySelector('#product_form').addEventListener('submit', event => {
       event.preventDefault();
@@ -66,9 +122,10 @@ async function initialize() {
       const quantity = Number(event.target.elements.quantity.value);
       if (!Number.isInteger(quantity) || quantity < 1) return;
       const variant = [...document.querySelectorAll('.js-insta-variant.selected')].map(el=>el.dataset.option).join(' / ');
+      const unitPrice = selectedVariant(product).price;
       const lines = cart(); const existing = lines.find(line => line.id===product.id && line.variant===variant);
       if (existing) existing.quantity += quantity;
-      else lines.push({id:product.id, name:product.name, variant, price:product.price, quantity});
+      else lines.push({id:product.id, name:product.name, variant, price:unitPrice, quantity});
       saveCart(lines); document.querySelector('#cart-status').textContent = 'Agregado al carrito';
     });
   } else if (path === '/account/login') {

@@ -16,11 +16,13 @@ def ars_minor_units(text: str) -> int:
     return int(Decimal(normalized) * 100)
 
 
-def format_ars(minor_units: int) -> str:
-    """Render minor units as the storefront's cart amount, e.g. $58.000,00."""
+def format_ars(minor_units: int, *, short: bool = False) -> str:
+    """Render minor units as a storefront amount: $58.000,00 (cart) or, with
+    short=True, the listing/product form that omits zero cents: $58.000."""
     if type(minor_units) is not int or minor_units < 0:
         raise ValueError(
             f"Amount must be non-negative integer minor units: {minor_units!r}"
         )
     whole, cents = divmod(minor_units, 100)
-    return f"${whole:,}".replace(",", ".") + f",{cents:02d}"
+    text = f"${whole:,}".replace(",", ".")
+    return text if short and not cents else f"{text},{cents:02d}"

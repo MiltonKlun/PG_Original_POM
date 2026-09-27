@@ -11,13 +11,15 @@ class CartDrawer:
         self.items = self.root.locator(".js-cart-item")
         self.empty_message = self.root.locator(".alert-info")
         self.subtotal = self.root.locator(".js-cart-subtotal")
+        # Live close control is an icon-only anchor with no accessible name.
+        self.close_button = self.root.locator("a.js-modal-close.modal-close")
 
     def open(self) -> None:
         self.navbar.open_cart()
         expect(self.root).to_be_visible()
 
     def close(self) -> None:
-        self.root.get_by_role("button", name="Cerrar carrito", exact=True).click()
+        self.close_button.click()
         expect(self.root).to_be_hidden()
 
     def item(self, name: str, variant: str = "") -> Locator:

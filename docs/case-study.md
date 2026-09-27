@@ -105,14 +105,30 @@ a navigation step after adding, and removal from a two-line cart. The score
 went to **13 of 13**, and a weekly workflow now fails if it drops below 90%.
 Details are in the [test strategy](test-strategy.md#test-effectiveness-mutation-testing).
 
+## Keeping the simulation honest
+
+A simulation is only useful while it looks like the real thing. When I
+re-checked the live store, two page-object methods turned out to have been
+written against markup the mock had invented: the cart drawer's "Cerrar
+carrito" button doesn't exist live (the real control is an unnamed icon
+link), and the menu's SHOP entry is a toggle that opens a sub-panel, not a
+link to the shop. Both would have failed on production while the mock suite
+stayed green.
+
+I fixed the mock to match the observed markup rather than the other way
+round, added the real pricing model (prices per variant, with a compare-at
+price only on promotions), the size filter and load-more pagination, and
+wrote read-only locator contract checks that run against both targets. The
+menu journey now passes on live too.
+
 ## Results
 
 | Measure | Value |
 |---|---|
-| Collected cases | 99: 32 UI, 67 offline framework |
-| Mutation score | 13 of 13 injected defects detected (was 6 of 13) |
+| Collected cases | 115: 43 UI, 72 offline framework |
+| Mutation score | 19 of 19 injected defects detected (first measured at 6 of 13) |
 | Mock run (Windows, Chromium) | ~15 s |
-| Live read-only cases | 11 (`live_safe`), 3 in the weekly smoke |
+| Live read-only cases | 19 (`live_safe`), 11 in the weekly live run |
 | Browsers | Chromium, Firefox, WebKit on the mock; Pixel 7 emulation smoke |
 | CI | Required static and framework checks on Ubuntu and Windows, plus mock UI on Ubuntu; weekly live and compatibility runs |
 | Defects in the store's markup | 5 accessibility/HTML issues documented in the [site contract](site-contract.md) |

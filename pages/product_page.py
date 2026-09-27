@@ -9,6 +9,8 @@ class ProductPage(BasePage):
         # IDs separate the PDP from hidden quickshop forms and old/instalment prices.
         self.form = page.locator("#product_form")
         self.price = page.locator("#price_display")
+        # Hidden (display:none) when the selected variant has no discount.
+        self.compare_price = page.locator("#compare_price_display")
         # Live form also has a div.js-addtocart animation placeholder.
         self.add_button = self.form.locator('input[type="submit"].js-addtocart')
         self.quantity = self.form.get_by_role("spinbutton")
