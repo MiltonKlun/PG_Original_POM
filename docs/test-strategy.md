@@ -58,6 +58,7 @@ P0 = revenue or order correctness, P1 = discovery and forms.
 |---|---|---|---|---|
 | HOME | P1 | Brand title, header/footer, SHOP link reaches `/productos/` | `test_smoke.py::test_home_page_load` | Mock + live |
 | SEARCH | P1 | Search opens, input is visible and focused, close hides it | `test_smoke.py::test_search_modal_opens` | Mock + live |
+| LOADING | P1 | With the catalog request held open, the cookie banner still dismisses and search still opens | `test_loading.py::test_page_controls_work_before_catalog_loads` | Mock |
 | MENU | P1 | Hamburger menu → SHOP panel → all products → first available product; heading matches | `test_navigation.py::test_menu_reaches_product` | Mock + live |
 | RESULTS | P1 | Known term returns the product; impossible term shows empty state and no cards | `test_search.py::test_search_results`, `test_search_empty` | Mock + live |
 | RESULT-SET | P1 | Partial lowercase, exact and shared-prefix terms return exactly the expected products, and nothing else | `test_search.py::test_search_filters_catalog` (3 datasets) | Mock |
@@ -83,7 +84,7 @@ P0 = revenue or order correctness, P1 = discovery and forms.
 | MONEY | P0 | ARS display parsing to integer minor units; ambiguous or installment text rejected; formatting round-trips | `framework/test_money.py` (30 cases) | Offline |
 | CONTRACT | P1 | Page-object locators resolve without changing state: header, cart drawer, menu panel, listing, filters, card metadata, product form and price attribute, login, contact | `test_contract.py` (7 cases) | Mock + live |
 
-Totals: 133 collected cases, of which 43 are UI and 90 are offline framework
+Totals: 134 collected cases, of which 44 are UI and 90 are offline framework
 checks. 19 UI cases are `live_safe`; the weekly live run selects the 11 that
 are also `smoke` or `contract`.
 
@@ -169,6 +170,7 @@ python scripts/mutation_check.py --only M05
 | 2026-09-27 | Before adding the tests below | 46.2% (6 of 13) |
 | 2026-09-27 | With result-set, add-quantity, merge, persistence and partial-removal tests | 100% (13 of 13) |
 | 2026-09-27 | Simulation aligned with live markup; 6 mutants added for variant pricing, pagination, size filter and menu | 100% (19 of 19) |
+| 2026-09-28 | Page objects refactored; mutant added for controls wired only after data loads | 100% (20 of 20) |
 
 The weekly and pull-request workflow fails below 90%.
 

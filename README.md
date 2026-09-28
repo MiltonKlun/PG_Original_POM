@@ -126,10 +126,10 @@ flowchart LR
 
 ## Test coverage
 
-**133 cases:** 43 browser scenarios and 90 offline framework checks
+**134 cases:** 44 browser scenarios and 90 offline framework checks
 (settings validation, data loading, page navigation contract, money parsing
-and formatting, server lifecycle, mutation harness). A mutation check injects 19 realistic storefront
-defects into the simulation; the suite currently detects all 19.
+and formatting, server lifecycle, mutation harness). A mutation check injects 20 realistic storefront
+defects into the simulation; the suite currently detects all 20.
 
 | Area | Scenarios | Target |
 |---|---|---|

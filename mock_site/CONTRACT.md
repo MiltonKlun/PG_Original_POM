@@ -27,6 +27,9 @@ No external assets, analytics, authentication, email or payment services exist.
 
 ## Simulation-only rules
 
+Header, menu, search, cart-close and cookie controls work before the catalog
+request completes; only product content waits for data.
+
 Cart additions persist in localStorage per browser context. Identity is product
 ID + selected size/color; repeated identical additions increase quantity. A
 line's unit price is the selected variant's price.

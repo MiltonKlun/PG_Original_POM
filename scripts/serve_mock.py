@@ -3,6 +3,7 @@
 import argparse
 import os
 import socket
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from email.message import Message
@@ -55,6 +56,9 @@ class Handler(SimpleHTTPRequestHandler):
     # Windows the resulting TIME_WAIT churn surfaced as ERR_NO_BUFFER_SPACE.
     protocol_version = "HTTP/1.1"
     timeout = 5  # Idle keep-alive connections close instead of waiting forever.
+    # Headers and body are separate writes; TCP_NODELAY keeps Nagle and
+    # delayed ACKs from stalling responses on kept-alive connections.
+    disable_nagle_algorithm = True
 
     def log_message(self, format: str, *args: Any) -> None:
         pass  # Browser diagnostics record failed requests; no raw request logging.
@@ -73,10 +77,10 @@ class Handler(SimpleHTTPRequestHandler):
 
 class LocalHTTPServer(ThreadingHTTPServer):
     # Windows SO_REUSEADDR permits competing listeners; require ownership.
-    allow_reuse_address = os.name != "nt"
+    allow_reuse_address = sys.platform != "win32"
 
     def server_bind(self) -> None:
-        if os.name == "nt":
+        if sys.platform == "win32":  # mypy narrows sys.platform, not os.name.
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
         super().server_bind()
 
