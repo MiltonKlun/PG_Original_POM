@@ -1,18 +1,20 @@
-from playwright.sync_api import Page, expect
+from playwright.sync_api import expect
+from components.base_component import BaseComponent
 
 
-class CookieBanner:
-    def __init__(self, page: Page) -> None:
-        # Storefront supplies a stable action class but no accessible name contract.
-        self.dismiss_button = page.locator(".js-acknowledge-cookies")
+class CookieBanner(BaseComponent):
+    """Cookie notice; its root is the dismiss control, the only stable hook.
+
+    The storefront supplies a stable action class but no accessible name.
+    """
 
     def dismiss_if_present(self) -> None:
         try:
-            expect(self.dismiss_button).to_be_visible(timeout=500)
+            expect(self.root).to_be_visible(timeout=500)
         except AssertionError:
             # Only absence is optional. A detected but unclickable banner must fail.
-            if self.dismiss_button.count() == 0 or not self.dismiss_button.is_visible():
+            if self.root.count() == 0 or not self.root.is_visible():
                 return
             raise
-        self.dismiss_button.click()
-        expect(self.dismiss_button).to_be_hidden()
+        self.root.click()
+        expect(self.root).to_be_hidden()

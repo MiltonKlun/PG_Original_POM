@@ -1,19 +1,18 @@
 import re
 import pytest
 from playwright.sync_api import expect
+from config import ui_text
 from config.test_data import load_data
 
 
 @pytest.mark.auth
 @pytest.mark.mock_only
-@pytest.mark.parametrize(
-    "user", load_data()["auth"]["invalid_users"], ids=lambda user: user["id"]
-)
+@pytest.mark.parametrize("user", load_data().invalid_logins, ids=lambda user: user.id)
 def test_login_failure(login_page, user):
     login_page.open()
-    login_page.fill_credentials(user["email"], user["password"])
+    login_page.fill_credentials(user.email, user.password)
     login_page.submit()
-    expect(login_page.error_message).to_have_text("Credenciales incorrectas")
+    expect(login_page.error_message).to_have_text(ui_text.INVALID_CREDENTIALS)
     expect(login_page.form).to_be_visible()
     expect(login_page.page).to_have_url(re.compile(r"/account/login/?$"))
 
@@ -36,4 +35,6 @@ def test_login_native_validation(login_page, email, password):
 @pytest.mark.live_safe
 def test_forgot_password_link(login_page):
     login_page.open()
-    login_page.open_password_reset()
+    reset_page = login_page.open_password_reset()
+    expect(reset_page.page).to_have_url(re.compile(r"/account/reset/?$"))
+    expect(reset_page.reset_heading).to_be_visible()

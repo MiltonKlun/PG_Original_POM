@@ -83,7 +83,7 @@ P0 = revenue or order correctness, P1 = discovery and forms.
 | MONEY | P0 | ARS display parsing to integer minor units; ambiguous or installment text rejected; formatting round-trips | `framework/test_money.py` (30 cases) | Offline |
 | CONTRACT | P1 | Page-object locators resolve without changing state: header, cart drawer, menu panel, listing, filters, card metadata, product form and price attribute, login, contact | `test_contract.py` (7 cases) | Mock + live |
 
-Totals: 122 collected cases, of which 43 are UI and 79 are offline framework
+Totals: 133 collected cases, of which 43 are UI and 90 are offline framework
 checks. 19 UI cases are `live_safe`; the weekly live run selects the 11 that
 are also `smoke` or `contract`.
 
@@ -99,6 +99,21 @@ are also `smoke` or `contract`.
   generated emails use `example.com`.
 - Money is compared in integer minor units, never binary floats. Expected
   display text is derived from test data with `format_ars`, not hard-coded.
+
+## Page object design
+
+- Pages extend a small `BasePage` that declares a relative `path` template
+  (`/productos/{slug}/`). One `open(**params)` validates parameters as URL
+  slugs and fails before navigating if they're missing, unexpected or unsafe.
+- Shared UI regions are components rooted in a `Locator` (header, search
+  panel, cart drawer, cookie notice), built on first use and composed into
+  pages. The cart drawer receives its header trigger instead of creating a
+  second navbar.
+- Navigation returns the destination page object
+  (`home.open_shop().open_product(name)`), so a journey is explicit and mypy
+  checks every step.
+- Store copy lives in `config/ui_text.py`; test data is parsed into frozen,
+  validated dataclasses with readable errors.
 
 ## Assertion policy
 

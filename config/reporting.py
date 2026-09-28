@@ -9,8 +9,13 @@ from pathlib import Path
 from time import monotonic
 from uuid import uuid4
 
+from collections.abc import Sequence
+from typing import Any
+
 import pytest
 from pytest_metadata.plugin import metadata_key
+
+from config.settings import Settings
 
 
 def revision(root: Path) -> str:
@@ -37,11 +42,11 @@ def revision(root: Path) -> str:
 
 
 class RunReport:
-    def __init__(self, config, settings):
+    def __init__(self, config: pytest.Config, settings: Settings) -> None:
         self.config = config
         self.settings = settings
         self.started = monotonic()
-        self.records = {}
+        self.records: dict[str, dict[str, Any]] = {}
         self.deselected = 0
         self.collection_errors = 0
         root = Path(config.rootpath)
@@ -84,17 +89,17 @@ class RunReport:
             "html": config.option.htmlpath,
         }
 
-    def pytest_sessionstart(self, session):
+    def pytest_sessionstart(self, session: pytest.Session) -> None:
         session.config.stash[metadata_key].update(self.metadata)
 
-    def pytest_deselected(self, items):
+    def pytest_deselected(self, items: Sequence[pytest.Item]) -> None:
         self.deselected += len(items)
 
-    def pytest_collectreport(self, report):
+    def pytest_collectreport(self, report: pytest.CollectReport) -> None:
         if report.failed:
             self.collection_errors += 1
 
-    def pytest_runtest_logreport(self, report):
+    def pytest_runtest_logreport(self, report: pytest.TestReport) -> None:
         result = self.records.setdefault(
             report.nodeid, {"status": "passed", "duration": 0}
         )
@@ -106,7 +111,9 @@ class RunReport:
         elif hasattr(report, "wasxfail") and report.passed:
             result["status"] = "xpassed"
 
-    def pytest_sessionfinish(self, session, exitstatus):
+    def pytest_sessionfinish(
+        self, session: pytest.Session, exitstatus: int | pytest.ExitCode
+    ) -> None:
         counts = dict.fromkeys(
             ["passed", "failed", "error", "skipped", "xfailed", "xpassed"], 0
         )
@@ -124,8 +131,10 @@ class RunReport:
             json.dumps(summary, indent=2), encoding="utf-8"
         )
 
-    def pytest_terminal_summary(self, terminalreporter):
+    def pytest_terminal_summary(
+        self, terminalreporter: pytest.TerminalReporter
+    ) -> None:
         terminalreporter.write_line(f"Run summary: {self.directory / 'summary.json'}")
 
-    def pytest_html_report_title(self, report):
+    def pytest_html_report_title(self, report: Any) -> None:
         report.title = f"PG Original | {self.settings.target} | QA results"

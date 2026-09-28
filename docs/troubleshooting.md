@@ -42,6 +42,7 @@ supported and recorded; use unique paths when overriding the defaults.
 | Assertion failure | Compare expected business state with DOM, action sequence and network evidence. Do not relax the assertion to get green. |
 | Strict locator error | Check responsive duplicates or changed markup; correct scope in the owning POM. Do not add arbitrary `.first`. |
 | Timeout | Inspect the trace first. It may be a locator, data, product, network or environment problem. It alone does not establish bot detection. |
+| `net::ERR_NO_BUFFER_SPACE` on a navigation (Windows) | The OS ran out of socket buffers, typically after many back-to-back runs leave thousands of sockets in `TIME_WAIT` (`(Get-NetTCPConnection -State TimeWait).Count`). Not a product or locator defect. The Python server uses HTTP/1.1 keep-alive, which cut connections per UI run from 290 to 72; wait for sockets to expire and rerun. |
 | Observed first-party 403/429 or challenge UI | Record endpoint path/status and screenshot. Stop repeated attempts; keep the live workflow's failed result visible. |
 | Browser installation error | Run `python -m playwright install chromium` using the same interpreter as pytest; Linux needs `--with-deps`. |
 | `Mock attempted external requests` | A local asset/redirect escaped the mock origin. Fix the mock/serving contract, rather than permitting production traffic. |

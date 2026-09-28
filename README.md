@@ -57,11 +57,12 @@
 
 | Area | How it shows up in the code |
 |---|---|
-| **Page Object Model** | Page objects in `pages/` own locators and user actions; shared UI (navbar, search, cart drawer, cookie banner) are composed components in `components/`, not base-class inheritance. |
+| **Page Object Model** | Page objects in `pages/` own locators and user actions, and navigation returns the page you land on. Shared UI (navbar, search, cart drawer, cookie banner) are components in `components/`, each rooted in its own locator and composed, not inherited. |
+| **Type safety** | The framework is fully annotated and checked with mypy in CI; test data is loaded into typed, validated dataclasses. |
 | **Business assertions** | Tests check outcomes, not visibility: the clicked product is the product shown; cart lines match exact product, variant, quantity, line amount and subtotal. |
 | **Resilient locators** | Role/label locators where the site provides them; CSS scoped to the owning form or panel where it doesn't, with the reason documented next to it. No arbitrary `.first`, no fixed sleeps. |
 | **Environment safety** | Target and URL are validated before a browser starts. `live_safe` / `mock_only` markers are enforced at collection, so no cart or form action can reach production. Mock runs fail on any external request. |
-| **Data-driven testing** | Named datasets in JSON drive parametrized auth and contact cases; seeded Faker (`es_AR`) makes generated data reproducible per test. |
+| **Data-driven testing** | Named datasets in JSON drive parametrized auth, contact, search and filter cases; seeded Faker (`es_AR`) makes generated data reproducible per test. |
 | **Correct money handling** | ARS prices (`$29.000,00`) parsed into integer minor units with a strict parser that rejects instalment and ambiguous text. |
 | **Evidence and reporting** | Per-run HTML, JUnit and JSON reports tagged with target, browser, seed and git revision; trace, screenshot and video kept on failure. |
 | **CI/CD** | Required checks on Ubuntu and Windows, Docker-served mock UI tests, weekly cross-browser and live read-only runs, SHA-pinned actions, pinned dependencies. |
@@ -85,7 +86,7 @@ automation works. They are not a claim about PG Original's production systems.
 
 ```mermaid
 flowchart LR
-    T["tests/<br/>scenarios + assertions"] --> P["pages/<br/>Home · Shop · Product · Login · Contact"]
+    T["tests/<br/>scenarios + assertions"] --> P["pages/<br/>Home · Shop · Product · Login · Reset · Contact"]
     P --> C["components/<br/>Navbar · SearchModal · CartDrawer · CookieBanner"]
     P --> PW["Playwright Page"]
     C --> PW
@@ -100,10 +101,11 @@ flowchart LR
 │   ├── home_page.py
 │   ├── shop_page.py        #   Product discovery and filtering
 │   ├── product_page.py     #   Product details, variants, add to cart
-│   ├── login_page.py       #   Login and password-reset controls
+│   ├── login_page.py       #   Login form and forgot-password link
+│   ├── password_reset_page.py # Password-reset destination
 │   └── contact_page.py     #   Contact fields (never submitted)
 ├── components/             # Navbar, search modal, cart drawer, cookie banner
-├── config/                 # Target settings, test data loader, ARS parser, reporting
+├── config/                 # Target settings, typed test data, UI copy, ARS money, reporting
 ├── tests/                  # UI scenarios + tests/framework/ offline checks
 ├── data/                   # Named datasets and expected values
 ├── mock_site/              # Local storefront simulation + behavior contract + Dockerfile
@@ -114,6 +116,8 @@ flowchart LR
 **Design rules**
 
 - Tests talk only to page objects; no selectors in tests.
+- Components are rooted in a locator; navigation methods return the page
+  object you land on, so journeys read (and type-check) as a chain.
 - Page objects take a Playwright `Page`, navigate with relative paths and never
   read environment variables or know which target they're running against.
 - Tests own expected values and assertions. Page objects only wait for the
@@ -122,9 +126,9 @@ flowchart LR
 
 ## Test coverage
 
-**122 cases:** 43 browser scenarios and 79 offline framework checks
-(settings validation, data loading, money parsing and formatting, server
-lifecycle, mutation harness). A mutation check injects 19 realistic storefront
+**133 cases:** 43 browser scenarios and 90 offline framework checks
+(settings validation, data loading, page navigation contract, money parsing
+and formatting, server lifecycle, mutation harness). A mutation check injects 19 realistic storefront
 defects into the simulation; the suite currently detects all 19.
 
 | Area | Scenarios | Target |
@@ -254,7 +258,7 @@ environment problems apart.
 
 | Workflow | Trigger | What it runs | Blocks merge |
 |---|---|---|---|
-| [Mock CI](.github/workflows/ci.yml) | PR / push to `main` | Black, Flake8 and framework checks on Ubuntu + Windows; all UI tests on Chromium against the Docker-served simulation | Yes |
+| [Mock CI](.github/workflows/ci.yml) | PR / push to `main` | Black, Flake8, mypy and framework checks on Ubuntu + Windows; all UI tests on Chromium against the Docker-served simulation | Yes |
 | [Browser compatibility](.github/workflows/compatibility.yml) | Weekly / manual | Full UI suite on Firefox and WebKit; Pixel 7 smoke | No |
 | [Live read-only smoke](.github/workflows/live-smoke.yml) | Weekly / manual | 11 read-only smoke and locator-contract checks on pgoriginal.com | No |
 | [Mutation score](.github/workflows/mutation.yml) | Weekly / manual / PRs touching tests or the simulation | Injects each catalogued defect and fails if fewer than 90% are detected | No |

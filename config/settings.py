@@ -1,6 +1,7 @@
 """Resolve the execution target before any browser navigation."""
 
 from dataclasses import dataclass
+from typing import Self
 from urllib.parse import urlsplit
 
 
@@ -15,7 +16,9 @@ class Settings:
     assertion_timeout: int = 5_000
 
     @classmethod
-    def resolve(cls, target="mock", base_url=None, seed=1729):
+    def resolve(
+        cls, target: str = "mock", base_url: str | None = None, seed: int = 1729
+    ) -> Self:
         if target not in {"mock", "live"}:
             raise ValueError("TARGET must be 'mock' or 'live'")
         default = (

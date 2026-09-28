@@ -47,15 +47,16 @@ def test_product_listing(shop_page):
         assert all(type(v["price_number_raw"]) is int for v in variants)
 
 
-def test_product_form(shop_page, product_page):
+def test_product_form(shop_page):
     shop_page.open()
-    shop_page.open_product(shop_page.first_product_name())
-    expect(product_page.add_button).to_have_count(1)
-    expect(product_page.quantity).to_have_count(1)
-    expect(product_page.compare_price).to_be_attached()
+    product = shop_page.open_product(shop_page.first_product_name())
+    expect(product.add_button).to_have_count(1)
+    expect(product.quantity).to_have_count(1)
+    expect(product.compare_price).to_be_attached()
     # Displayed current price agrees with the element's raw price attribute.
-    raw = product_page.price.get_attribute("data-product-price")
-    assert int(raw) == ars_minor_units(product_page.price.inner_text())
+    raw = product.price.get_attribute("data-product-price")
+    assert raw is not None
+    assert int(raw) == ars_minor_units(product.price.inner_text())
 
 
 def test_login_form(login_page):
