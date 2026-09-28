@@ -278,6 +278,20 @@
         "test_menu_reaches_product",
         "test_menu_shop_panel"
       ]
+    },
+    {
+      "id": "M20",
+      "description": "Page controls are wired only after product data loads",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "  wireShell();\n  const response = await fetch('/catalog.json');",
+          "replace": "  const response = await fetch('/catalog.json');\n  wireShell();"
+        }
+      ],
+      "killed_by": [
+        "test_page_controls_work_before_catalog_loads"
+      ]
     }
   ]
 }

@@ -1,6 +1,8 @@
 """Configuration and target enforcement; safe during offline collection."""
 
 import os
+from collections.abc import Iterator
+
 import pytest
 from config.settings import Settings, eligible
 from config.reporting import RunReport
@@ -8,13 +10,13 @@ from config.reporting import RunReport
 SETTINGS = pytest.StashKey[Settings]()
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption("--seed", type=int, default=1729, help="Synthetic data seed")
     parser.addoption("--run-id", default=None, help="Unique evidence run ID")
 
 
 @pytest.hookimpl(tryfirst=True)
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config) -> None:
     try:
         config.stash[SETTINGS] = Settings.resolve(
             os.environ.get("TARGET", "mock"),
@@ -29,7 +31,7 @@ def pytest_configure(config):
         )
 
 
-def pytest_report_header(config):
+def pytest_report_header(config: pytest.Config) -> str:
     settings = config.stash[SETTINGS]
     return (
         f"target={settings.target} base_url={settings.base_url} "
@@ -37,8 +39,11 @@ def pytest_report_header(config):
     )
 
 
-def pytest_collection_modifyitems(config, items):
-    selected, deselected = [], []
+def pytest_collection_modifyitems(
+    config: pytest.Config, items: list[pytest.Item]
+) -> None:
+    selected: list[pytest.Item] = []
+    deselected: list[pytest.Item] = []
     for item in items:
         try:
             allowed = eligible(
@@ -52,12 +57,12 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(scope="session")
-def settings(pytestconfig):
+def settings(pytestconfig: pytest.Config) -> Settings:
     return pytestconfig.stash[SETTINGS]
 
 
 @pytest.fixture(scope="session")
-def base_url(settings):
+def base_url(settings: Settings) -> Iterator[str]:
     if settings.target == "live":
         yield settings.base_url
     else:

@@ -1,25 +1,31 @@
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Locator, expect
+from components.base_component import BaseComponent
+from config import ui_text
 
 
-class Navbar:
-    def __init__(self, page: Page) -> None:
-        self.root = page.locator("header")
-        self.search_link = self.root.get_by_role("link", name="Buscador", exact=True)
+class Navbar(BaseComponent):
+    """Site header; root is the <header> element."""
+
+    def __init__(self, root: Locator) -> None:
+        super().__init__(root)
+        self.search_link = self.root.get_by_role(
+            "link", name=ui_text.SEARCH_LINK, exact=True
+        )
         # Header drawer/menu links do not have stable accessible text on mobile.
         self.cart_link = self.root.locator('a[data-toggle="#modal-cart"]')
         self.menu_link = self.root.locator('a[data-toggle="#nav-hamburger"]')
-        self.menu = page.locator("#nav-hamburger")
+        # The menu panel the header opens is rendered outside <header>.
+        self.menu = self.page.locator("#nav-hamburger")
         # SHOP is a submenu toggle (href="#"); a hidden duplicate exists in the DOM.
-        self.menu_shop_toggle = self.menu.get_by_role("link", name="SHOP", exact=True)
+        self.menu_shop_toggle = self.menu.get_by_role(
+            "link", name=ui_text.SHOP, exact=True
+        )
         self.menu_all_products = self.menu.get_by_role(
-            "link", name="Ver todos los productos", exact=True
+            "link", name=ui_text.ALL_PRODUCTS, exact=True
         )
 
     def open_search(self) -> None:
         self.search_link.click()
-
-    def open_cart(self) -> None:
-        self.cart_link.click()
 
     def open_menu(self) -> None:
         self.menu_link.click()

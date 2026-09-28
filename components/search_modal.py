@@ -1,10 +1,12 @@
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Locator, expect
+from components.base_component import BaseComponent
 
 
-class SearchModal:
-    def __init__(self, page: Page) -> None:
-        # Responsive duplicate forms require the observed active panel ID.
-        self.root = page.locator("#nav-search")
+class SearchModal(BaseComponent):
+    """Search panel; root is the active #nav-search (a hidden duplicate exists)."""
+
+    def __init__(self, root: Locator) -> None:
+        super().__init__(root)
         self.input = self.root.get_by_role("searchbox")
         # Live close anchor has no accessible name.
         self.close_button = self.root.locator(".js-modal-close")

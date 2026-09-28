@@ -60,13 +60,9 @@ function filtersHTML(products, color, size) {
   const labels = (name, values, valuesOf, active) => values.map(value => `<label class="js-filter-checkbox" data-filter-name="${name}" data-filter-value="${value}"><input type="checkbox" ${active===value?'checked':''}> ${value} (${products.filter(p => valuesOf(p).includes(value)).length})</label>`).join('');
   return `<div class="filters">${labels('Color', unique(products.flatMap(colorsOf)), colorsOf, color)}${labels('Talle', unique(products.flatMap(sizesOf)), sizesOf, size)}<a href="/productos/" class="js-remove-all-filters-private">Borrar filtros</a></div>`;
 }
-async function initialize() {
-  const response = await fetch('/catalog.json');
-  if (!response.ok) throw new Error('Cannot load synthetic catalog');
-  const {page_size: pageSize, products} = await response.json();
-  const main = document.querySelector('main');
-  const path = location.pathname.replace(/\/$/, '') || '/';
-  const params = new URLSearchParams(location.search);
+// Page-shell controls exist in the static HTML, so wire them before any data
+// request: a slow catalog response must not make visible controls inert.
+function wireShell() {
   document.querySelectorAll('header [data-toggle]').forEach(link => link.addEventListener('click', event => {
     event.preventDefault(); const panel = document.querySelector(link.dataset.toggle); panel.hidden = false;
     if (panel.id === 'nav-search') panel.querySelector('input').focus();
@@ -77,6 +73,15 @@ async function initialize() {
   document.querySelector('#modal-cart .modal-close').addEventListener('click', () => { document.querySelector('#modal-cart').hidden = true; });
   document.querySelector('.cookies').hidden = localStorage.getItem('pg-qa-consent') === 'yes';
   document.querySelector('.js-acknowledge-cookies').addEventListener('click', () => {localStorage.setItem('pg-qa-consent','yes');document.querySelector('.cookies').hidden = true;});
+}
+async function initialize() {
+  wireShell();
+  const response = await fetch('/catalog.json');
+  if (!response.ok) throw new Error('Cannot load synthetic catalog');
+  const {page_size: pageSize, products} = await response.json();
+  const main = document.querySelector('main');
+  const path = location.pathname.replace(/\/$/, '') || '/';
+  const params = new URLSearchParams(location.search);
   if (path === '/') {
     main.innerHTML = '<h1>PG Original / QA lab</h1><p>Deterministic shopping scenarios. Synthetic products, isolated carts, meaningful assertions.</p><div class="grid">' + products.map(cardHTML).join('') + '</div>';
   } else if (path === '/productos' || path === '/search') {

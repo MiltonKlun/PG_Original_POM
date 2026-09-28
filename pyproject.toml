@@ -2,3 +2,22 @@
 line-length = 88
 target-version = ['py312']
 extend-exclude = '/(\.venv[^/]*|logs|test-results|proofs)/'
+
+[tool.mypy]
+python_version = "3.12"
+files = ["conftest.py", "config", "pages", "components", "scripts", "tests"]
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
+no_implicit_reexport = true
+
+# Framework code: every function and public method is annotated.
+[[tool.mypy.overrides]]
+module = ["config.*", "pages.*", "components.*", "scripts.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[[tool.mypy.overrides]]
+module = ["pytest_metadata.*"]
+ignore_missing_imports = true

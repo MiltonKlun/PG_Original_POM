@@ -1,9 +1,12 @@
 import re
 from playwright.sync_api import Page, expect
+from config import ui_text
 from pages.base_page import BasePage
 
 
 class ProductPage(BasePage):
+    path = "/productos/{slug}/"
+
     def __init__(self, page: Page) -> None:
         super().__init__(page)
         # IDs separate the PDP from hidden quickshop forms and old/instalment prices.
@@ -14,14 +17,7 @@ class ProductPage(BasePage):
         # Live form also has a div.js-addtocart animation placeholder.
         self.add_button = self.form.locator('input[type="submit"].js-addtocart')
         self.quantity = self.form.get_by_role("spinbutton")
-        self.unavailable = self.form.get_by_text("Sin stock", exact=True)
-
-    def open(self, slug: str) -> None:
-        if not re.fullmatch(r"[a-z0-9-]+", slug):
-            raise ValueError(
-                "Product slug must contain lowercase letters, digits or hyphens"
-            )
-        self._open_path(f"/productos/{slug}/")
+        self.unavailable = self.form.get_by_text(ui_text.OUT_OF_STOCK, exact=True)
 
     def select_variant(
         self, *, size: str | None = None, color: str | None = None

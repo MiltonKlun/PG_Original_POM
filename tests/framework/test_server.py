@@ -1,3 +1,4 @@
+from http.client import HTTPConnection
 from urllib.request import urlopen
 from urllib.error import HTTPError
 import pytest
@@ -81,7 +82,8 @@ def test_repository_files_and_listings_not_served(path):
 
 def test_public_surface_matches_docker_image():
     # Both serving modes must expose the same files: parse the image's COPY lines.
-    files, dirs = set(), set()
+    files: set[str] = set()
+    dirs: set[str] = set()
     for line in (ROOT / "Dockerfile").read_text(encoding="utf-8").splitlines():
         words = line.split()
         if words[:1] == ["COPY"] and not words[-1].startswith("/"):
@@ -89,3 +91,17 @@ def test_public_surface_matches_docker_image():
                 (dirs if source.endswith("/") else files).add(source.rstrip("/"))
     assert files == PUBLIC_FILES
     assert dirs == PUBLIC_DIRS
+
+
+def test_connections_are_kept_alive():
+    # One socket serves several requests, as nginx does; fewer sockets per run.
+    with MockServer(port=0) as server:
+        connection = HTTPConnection("127.0.0.1", server.server.server_port, timeout=5)
+        for route in ("/app.js", "/catalog.json"):
+            connection.request("GET", route)
+            response = connection.getresponse()
+            response.read()
+            assert response.status == 200
+            assert response.version == 11
+            assert not response.will_close
+        connection.close()

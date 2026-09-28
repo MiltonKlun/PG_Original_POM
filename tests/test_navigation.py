@@ -5,11 +5,10 @@ from playwright.sync_api import expect
 pytestmark = [pytest.mark.smoke, pytest.mark.live_safe]
 
 
-def test_menu_reaches_product(home_page, shop_page, product_page):
-    home_page.open()
-    home_page.navbar.open_shop_from_menu()
-    expect(home_page.page).to_have_url(re.compile(r"/productos/?$"))
-    name = shop_page.first_product_name()
-    shop_page.open_product(name)
-    expect(product_page.heading).to_have_text(name)
-    expect(product_page.add_button).to_be_enabled()
+def test_menu_reaches_product(home_page):
+    shop = home_page.open().open_shop_from_menu()
+    expect(shop.page).to_have_url(re.compile(r"/productos/?$"))
+    name = shop.first_product_name()
+    product = shop.open_product(name)
+    expect(product.heading).to_have_text(name)
+    expect(product.add_button).to_be_enabled()

@@ -121,12 +121,30 @@ price only on promotions), the size filter and load-more pagination, and
 wrote read-only locator contract checks that run against both targets. The
 menu journey now passes on live too.
 
+## An intermittent failure, traced to its cause
+
+After the page-object refactor, one full run in six failed: a product page
+stayed blank. The trace showed the navigation request ending in
+`net::ERR_NO_BUFFER_SPACE`, a Windows socket-exhaustion error, not a locator
+problem. The local server spoke HTTP/1.0, opening a new socket for every
+request, and hours of back-to-back runs had left thousands of sockets in
+`TIME_WAIT`. I first suspected the server's listen backlog, but 400
+concurrent requests succeeded at the default size, so I dropped that theory.
+Switching the server to HTTP/1.1 keep-alive, as nginx does, cut connections
+per UI run from 290 to 72.
+
+That change then exposed a second, older bug on Linux CI: the simulation
+wired its cookie and header buttons only after the product catalog loaded,
+so a click during a slow response did nothing. A test that holds the catalog
+request open reproduced it on every run; wiring the controls first fixed it,
+and a new mutant keeps it from coming back.
+
 ## Results
 
 | Measure | Value |
 |---|---|
-| Collected cases | 122: 43 UI, 79 offline framework |
-| Mutation score | 19 of 19 injected defects detected (first measured at 6 of 13) |
+| Collected cases | 134: 44 UI, 90 offline framework |
+| Mutation score | 20 of 20 injected defects detected (first measured at 6 of 13) |
 | Mock run (Windows, Chromium) | ~15 s |
 | Live read-only cases | 19 (`live_safe`), 11 in the weekly live run |
 | Browsers | Chromium, Firefox, WebKit on the mock; Pixel 7 emulation smoke |
