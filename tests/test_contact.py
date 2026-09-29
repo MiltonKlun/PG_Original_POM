@@ -1,3 +1,7 @@
+"""Contact form behavior. These cases check what the browser does with typed
+input, so they run on the simulation; the live form's contract (field types,
+form scope, disabled submit) is covered by tests/test_contract.py."""
+
 import pytest
 from playwright.sync_api import expect
 from config.test_data import load_data
@@ -13,7 +17,7 @@ def test_contact_form_validation(contact_page):
 
 
 @pytest.mark.contact
-@pytest.mark.live_safe
+@pytest.mark.mock_only
 def test_contact_form_fill(contact_page, fake_data):
     contact_page.open()
     contact_page.fill_form(fake_data.name, fake_data.email, fake_data.message)
@@ -23,7 +27,7 @@ def test_contact_form_fill(contact_page, fake_data):
 
 
 @pytest.mark.contact
-@pytest.mark.live_safe
+@pytest.mark.mock_only
 @pytest.mark.parametrize("case", load_data().contact_cases, ids=lambda case: case.id)
 def test_contact_explicit_inputs(contact_page, case):
     contact_page.open()
@@ -34,7 +38,7 @@ def test_contact_explicit_inputs(contact_page, case):
 
 
 @pytest.mark.contact
-@pytest.mark.live_safe
+@pytest.mark.mock_only
 @pytest.mark.parametrize(
     "email", ["invalid-email", "qa@"], ids=["missing-at", "missing-domain"]
 )

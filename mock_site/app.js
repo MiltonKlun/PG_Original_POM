@@ -40,8 +40,16 @@ function optionsHTML(kind, label, values) {
   if (!values.length) return '';
   return `<div><p>${label}</p>${values.map((v, i) => `<a class="js-insta-variant ${i===0?'selected':''}" title="${v}" data-option="${v}" data-kind="${kind}">${v}</a>`).join('')}</div>`;
 }
-function productHTML(product) {
-  return `<h1>${escapeHTML(product.name)}</h1><div id="price_display" class="js-price-display price"></div><div id="compare_price_display" class="js-compare-price-display price-compare"></div><form id="product_form">${optionsHTML('size', 'Talle', sizesOf(product))}${optionsHTML('color', 'Color', colorsOf(product))}<label>Cantidad<input name="quantity" type="number" value="1" min="1"></label><input class="js-addtocart" type="submit" value="Agregar al carrito" ${product.available?'':'disabled'}>${product.available?'':'<p>Sin stock</p>'}</form>`;
+// JSON-LD as the live store publishes it: an Offer priced in whole units for
+// the default (first) variant, keyed to the product page URL.
+function structuredData(product) {
+  const [first] = product.variants;
+  const url = `${location.origin}/productos/${product.slug}/`;
+  const data = {'@context': 'https://schema.org/', '@type': 'Product', mainEntityOfPage: {'@type': 'WebPage', '@id': url}, name: product.name, offers: {'@type': 'Offer', url, priceCurrency: 'ARS', price: String(first.price / 100), availability: product.available ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'}};
+  return `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
+}
+function productHTML(product, related) {
+  return `${structuredData(product)}${related ? structuredData(related) : ''}<h1>${escapeHTML(product.name)}</h1><div id="price_display" class="js-price-display price"></div><div id="compare_price_display" class="js-compare-price-display price-compare"></div><form id="product_form">${optionsHTML('size', 'Talle', sizesOf(product))}${optionsHTML('color', 'Color', colorsOf(product))}<label>Cantidad<input name="quantity" type="number" value="1" min="1"></label><input class="js-addtocart" type="submit" value="Agregar al carrito" ${product.available?'':'disabled'}>${product.available?'':'<p>Sin stock</p>'}</form>`;
 }
 function selectedVariant(product) {
   const chosen = Object.fromEntries([...document.querySelectorAll('.js-insta-variant.selected')].map(el => [el.dataset.kind, el.dataset.option]));
@@ -95,21 +103,23 @@ async function initialize() {
       const label = input.closest('label');
       location.href = input.checked ? `/productos/?${label.dataset.filterName}=${encodeURIComponent(label.dataset.filterValue)}` : '/productos/';
     }));
-    const more = main.querySelector('.js-load-more');
-    const updateMore = () => { more.style.display = shown < filtered.length ? 'block' : 'none'; };
-    updateMore();
-    more.querySelector('a').addEventListener('click', () => {
+    // Like the live store: scrolling to the end of the list appends the next
+    // page (infinite scroll); the "Mostrar más productos" fallback stays hidden.
+    main.querySelector('.js-load-more').style.display = 'none';
+    window.addEventListener('scroll', () => {
+      const atEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200;
+      if (!atEnd || shown >= filtered.length) return;
       const next = filtered.slice(shown, shown + pageSize);
       main.querySelector('.grid').insertAdjacentHTML('beforeend', next.map(cardHTML).join(''));
       shown += next.length;
       params.set('mpage', String(Math.ceil(shown / pageSize)));
       history.replaceState(null, '', `${location.pathname}?${params}`);
-      updateMore();
     });
   } else if (path.startsWith('/productos/')) {
     const product = products.find(p => path === '/productos/' + p.slug);
     if (!product) throw new Error('Unknown fixture product');
-    main.innerHTML = productHTML(product);
+    // Like the live store, also embed JSON-LD for a related product.
+    main.innerHTML = productHTML(product, products.find(p => p !== product));
     // The client form has an animation placeholder sharing the button's class.
     const placeholder = document.createElement('div');
     placeholder.className = 'js-addtocart js-addtocart-placeholder disabled';

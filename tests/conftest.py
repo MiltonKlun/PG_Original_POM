@@ -1,12 +1,15 @@
 """Plugin-owned browser lifecycle and explicitly requested page objects."""
 
 import logging
+from collections import Counter
 from collections.abc import Iterator
+from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import urlsplit
 
 import pytest
 from playwright.sync_api import (
+    Browser,
     BrowserContext,
     Error,
     Page,
@@ -16,6 +19,7 @@ from playwright.sync_api import (
     expect,
 )
 
+from config import live_policy
 from config.settings import Settings
 from config.test_data import ContactInput, SuiteData, contact_data, load_data
 from pages.contact_page import ContactPage
@@ -46,42 +50,67 @@ def fake_data(request: pytest.FixtureRequest, settings: Settings) -> ContactInpu
     return contact_data(request.node.nodeid, settings.seed)
 
 
+def default_user_agent(browser: Browser) -> str:
+    context = browser.new_context()
+    try:
+        return str(context.new_page().evaluate("navigator.userAgent"))
+    finally:
+        context.close()
+
+
 @pytest.fixture(scope="session")
 def browser_context_args(
-    browser_context_args: dict[str, Any], pytestconfig: pytest.Config
+    browser_context_args: dict[str, Any],
+    pytestconfig: pytest.Config,
+    settings: Settings,
+    request: pytest.FixtureRequest,
 ) -> dict[str, Any]:
     args = {**browser_context_args, "locale": "es-AR"}
     if not pytestconfig.getoption("device"):
         args["viewport"] = {"width": 1440, "height": 1000}
+    if settings.target == "live":
+        # Identify weekly live traffic; keep any device emulation user agent.
+        base = args.get("user_agent") or default_user_agent(
+            request.getfixturevalue("browser")
+        )
+        args["user_agent"] = f"{base} {live_policy.USER_AGENT_SUFFIX}"
     return args
 
 
 @pytest.fixture
 def network_guard(context: BrowserContext, settings: Settings) -> Iterator[None]:
-    """In mock runs, abort and report any request that leaves the mock origin."""
+    """Mock: abort any request leaving the mock origin, and fail the test.
+    Live: abort analytics and tracking requests (config/live_policy.py)."""
     external: list[str] = []
-    if settings.target == "mock":
+    blocked: Counter[str] = Counter()
 
-        def forbidden(url: str) -> bool:
-            return urlsplit(url).scheme in {"http", "https"} and origin(url) != origin(
-                settings.base_url
-            )
+    def forbidden(url: str) -> bool:
+        return urlsplit(url).scheme in {"http", "https"} and origin(url) != origin(
+            settings.base_url
+        )
 
-        def record(request: Request) -> None:
-            if forbidden(request.url):
-                parts = urlsplit(request.url)
-                external.append(f"{parts.scheme}://{parts.netloc}{parts.path}")
+    def record(request: Request) -> None:
+        if settings.target == "mock" and forbidden(request.url):
+            parts = urlsplit(request.url)
+            external.append(f"{parts.scheme}://{parts.netloc}{parts.path}")
 
-        def guard(route: Route) -> None:
-            if forbidden(route.request.url):
-                route.abort()
-            else:
-                route.continue_()
+    def guard(route: Route) -> None:
+        url = route.request.url
+        rule = live_policy.blocked_by(url) if settings.target == "live" else None
+        if rule is not None:
+            blocked[rule.purpose] += 1
+            route.abort("blockedbyclient")
+        elif settings.target == "mock" and forbidden(url):
+            route.abort()
+        else:
+            route.continue_()
 
-        # Request events also report redirects that do not invoke route handlers.
-        context.on("request", record)
-        context.route("**/*", guard)
+    # Request events also report redirects that do not invoke route handlers.
+    context.on("request", record)
+    context.route("**/*", guard)
     yield
+    if blocked:
+        browser_log.info("Blocked tracking requests: %s", dict(blocked))
     assert not external, f"Mock attempted external requests: {external}"
 
 
@@ -92,22 +121,34 @@ def ui_timeouts(page: Page, settings: Settings) -> None:
     expect.set_options(timeout=settings.assertion_timeout)
 
 
+@dataclass
+class Diagnostics:
+    """Problems the page itself reported while the test ran."""
+
+    page_errors: list[str] = field(default_factory=list)
+    first_party_failures: list[str] = field(default_factory=list)
+
+
 @pytest.fixture
-def browser_diagnostics(page: Page, settings: Settings) -> None:
-    """Log JavaScript error types and failed first-party responses."""
+def browser_diagnostics(page: Page, settings: Settings) -> Diagnostics:
+    """Record uncaught JavaScript errors and failed first-party responses."""
     first_party = urlsplit(settings.base_url).hostname
+    found = Diagnostics()
 
     def page_error(error: Error) -> None:
-        # Capture error types without copying potentially sensitive JS messages.
+        # Keep the error type only: messages may contain page or session data.
+        found.page_errors.append(error.name or "Error")
         browser_log.error("JavaScript error: %s", error.name)
 
     def failed_response(response: Response) -> None:
         parts = urlsplit(response.url)
         if parts.hostname == first_party and response.status >= 400:
+            found.first_party_failures.append(f"HTTP {response.status} {parts.path}")
             browser_log.error("First-party HTTP %s %s", response.status, parts.path)
 
     page.on("pageerror", page_error)
     page.on("response", failed_response)
+    return found
 
 
 @pytest.fixture(autouse=True)

@@ -52,6 +52,15 @@ def pytest_collection_modifyitems(
         except ValueError as exc:
             raise pytest.UsageError(f"{item.nodeid}: {exc}") from exc
         (selected if allowed else deselected).append(item)
+        defect = item.get_closest_marker("live_defect")
+        if defect and config.stash[SETTINGS].target == "live":
+            # Strict: once the store fixes the defect, the pass is reported so
+            # the marker gets removed. Only assertion failures count as expected.
+            item.add_marker(
+                pytest.mark.xfail(
+                    reason=defect.args[0], strict=True, raises=AssertionError
+                )
+            )
     items[:] = selected
     config.hook.pytest_deselected(items=deselected)
 

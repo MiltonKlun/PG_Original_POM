@@ -3,6 +3,7 @@ import re
 from functools import cached_property
 from string import Formatter
 from typing import Self
+from urllib.parse import urlsplit
 from playwright.sync_api import Page
 from components.cart_drawer import CartDrawer
 from components.cookie_banner import CookieBanner
@@ -53,6 +54,24 @@ class BasePage:
                     f"{name} must contain lowercase letters, digits or hyphens"
                 )
         return self.path.format(**params)
+
+    def wait_for_load(self) -> None:
+        """Wait for the page's subresources, not just its DOM."""
+        self.page.wait_for_load_state("load")
+
+    def linked_paths(self) -> list[str]:
+        """Unique same-origin link paths on the page, sorted."""
+        origin = urlsplit(self.page.url).netloc
+        hrefs = self.page.locator("a[href]").evaluate_all(
+            "links => links.map(link => link.href)"
+        )
+        paths = {
+            urlsplit(href).path
+            for href in hrefs
+            if urlsplit(href).netloc == origin
+            and urlsplit(href).scheme in ("http", "https")
+        }
+        return sorted(paths)
 
     def open(self, **params: str) -> Self:
         path = self.url_for(**params)

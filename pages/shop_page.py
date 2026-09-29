@@ -1,9 +1,20 @@
 import json
+from dataclasses import dataclass
 from typing import Any
 from playwright.sync_api import Locator, Page, expect
 from config import ui_text
 from pages.base_page import BasePage
 from pages.product_page import ProductPage
+
+
+@dataclass(frozen=True)
+class ProductCard:
+    """What a listing card shows, plus the variant data it publishes."""
+
+    name: str
+    displayed_price: str
+    sold_out: bool
+    variants: tuple[dict[str, Any], ...]
 
 
 class ShopPage(BasePage):
@@ -58,19 +69,43 @@ class ShopPage(BasePage):
         expect(self.filters.locator("input:checked")).to_have_count(0)
 
     def load_more(self) -> None:
+        """Scroll to the end of the list; the storefront appends the next page.
+
+        The live listing uses infinite scroll; its "Mostrar más productos"
+        control is a hidden fallback.
+        """
         shown = self.cards.count()
-        self.load_more_button.click()
-        expect(self.cards.nth(shown)).to_be_visible()
+        self.page.evaluate("window.scrollTo(0, document.documentElement.scrollHeight)")
+        expect(self.cards.nth(shown)).to_be_attached()
+
+    @staticmethod
+    def _variants(card: Locator) -> list[dict[str, Any]]:
+        # Public card metadata drives the storefront's own variant choices.
+        raw = card.locator("[data-variants]").get_attribute("data-variants")
+        if raw is None:
+            raise AssertionError("Product card has no data-variants metadata")
+        variants: list[dict[str, Any]] = json.loads(raw)
+        return variants
 
     def card_variants(self) -> list[list[dict[str, Any]]]:
-        # Public card metadata drives the storefront's own variant choices.
-        variants = []
-        for card in self.cards.all():
-            raw = card.locator("[data-variants]").get_attribute("data-variants")
-            if raw is None:
-                raise AssertionError("Product card has no data-variants metadata")
-            variants.append(json.loads(raw))
-        return variants
+        return [self._variants(card) for card in self.cards.all()]
+
+    def card_summaries(self) -> list[ProductCard]:
+        return [
+            ProductCard(
+                name=card.locator(".item-name").inner_text().strip(),
+                displayed_price=card.locator(".js-price-display").inner_text().strip(),
+                sold_out=card.get_by_text(ui_text.OUT_OF_STOCK, exact=True).count() > 0,
+                variants=tuple(self._variants(card)),
+            )
+            for card in self.cards.all()
+        ]
+
+    def filter_values(self, name: str) -> list[str]:
+        values = self.filter_options(name).evaluate_all(
+            "labels => labels.map(label => label.dataset.filterValue)"
+        )
+        return [str(value) for value in values]
 
     def displayed_variant_values(self) -> list[set[str]]:
         # Option position varies by product, so read every optionN value.

@@ -61,7 +61,7 @@
 | **Type safety** | The framework is fully annotated and checked with mypy in CI; test data is loaded into typed, validated dataclasses. |
 | **Business assertions** | Tests check outcomes, not visibility: the clicked product is the product shown; cart lines match exact product, variant, quantity, line amount and subtotal. |
 | **Resilient locators** | Role/label locators where the site provides them; CSS scoped to the owning form or panel where it doesn't, with the reason documented next to it. No arbitrary `.first`, no fixed sleeps. |
-| **Environment safety** | Target and URL are validated before a browser starts. `live_safe` / `mock_only` markers are enforced at collection, so no cart or form action can reach production. Mock runs fail on any external request. |
+| **Environment safety** | Target and URL are validated before a browser starts. `live_safe` / `mock_only` markers are enforced at collection, so no cart or form action can reach production. Mock runs fail on any external request. Live runs block ad pixels, analytics and the store's visit counter, and identify themselves in the user agent. |
 | **Data-driven testing** | Named datasets in JSON drive parametrized auth, contact, search and filter cases; seeded Faker (`es_AR`) makes generated data reproducible per test. |
 | **Correct money handling** | ARS prices (`$29.000,00`) parsed into integer minor units with a strict parser that rejects instalment and ambiguous text. |
 | **Evidence and reporting** | Per-run HTML, JUnit and JSON reports tagged with target, browser, seed and git revision; trace, screenshot and video kept on failure. |
@@ -73,7 +73,7 @@
 |---|---|---|
 | **Runs against** | `mock_site/` on `http://127.0.0.1:8090` | `https://www.pgoriginal.com` |
 | **Data** | Synthetic products (`QA Remera`, `QA Gorra`, `QA Agotado`) and fixed prices | Whatever the store shows that day |
-| **Covers** | Everything, including cart add/quantity/remove, sold-out products, invalid login and form validation | Home, menu, search, product details and the locator contract (weekly); reset link and non-submitting contact checks on demand |
+| **Covers** | Everything, including cart add/quantity/remove, sold-out products, invalid login and form validation | Home, menu, search, product details, catalog and price consistency, filters, pagination, page health and the locator contract (weekly) |
 | **Purpose** | Deterministic, repeatable proof that the tests detect wrong outcomes | Early warning that the real markup has changed |
 | **Never does** | Contact external hosts | Add to cart, log in, submit forms, send email, bypass challenges |
 
@@ -126,10 +126,10 @@ flowchart LR
 
 ## Test coverage
 
-**134 cases:** 44 browser scenarios and 90 offline framework checks
-(settings validation, data loading, page navigation contract, money parsing
-and formatting, server lifecycle, mutation harness). A mutation check injects 20 realistic storefront
-defects into the simulation; the suite currently detects all 20.
+**166 cases:** 55 browser scenarios and 111 offline framework checks
+(settings validation, data loading, page navigation contract, live traffic
+policy, money parsing and formatting, server lifecycle, mutation harness). A mutation check injects 23 realistic storefront
+defects into the simulation; the suite currently detects all 23.
 
 | Area | Scenarios | Target |
 |---|---|---|
@@ -141,6 +141,8 @@ defects into the simulation; the suite currently detects all 20.
 | Authentication | Invalid credentials (2 datasets); native validation (3 cases); reset-password navigation | Mock / mock / mock + live |
 | Contact | Seeded, accented and whitespace inputs; malformed emails; disabled submit | Mock + live / mock |
 | Locator contract | Every page-object locator resolves on the target without changing state (7 pages/components) | Mock + live |
+| Catalog integrity | Card prices match their variant data; listing, product page and data attribute agree; variant prices follow selection; size filter; infinite-scroll pagination; structured data (a known store defect on live) | Mock + live |
+| Page health | No JavaScript errors or failed first-party responses on four pages; home-page links resolve (robots.txt respected) | Mock + live |
 
 The full risk-based scenario map, eligibility rules and known gaps are in the
 [test strategy](docs/test-strategy.md).
@@ -260,7 +262,7 @@ environment problems apart.
 |---|---|---|---|
 | [Mock CI](.github/workflows/ci.yml) | PR / push to `main` | Black, Flake8, mypy and framework checks on Ubuntu + Windows; all UI tests on Chromium against the Docker-served simulation | Yes |
 | [Browser compatibility](.github/workflows/compatibility.yml) | Weekly / manual | Full UI suite on Firefox and WebKit; Pixel 7 smoke | No |
-| [Live read-only smoke](.github/workflows/live-smoke.yml) | Weekly / manual | 11 read-only smoke and locator-contract checks on pgoriginal.com | No |
+| [Live read-only smoke](.github/workflows/live-smoke.yml) | Weekly / manual | All 25 read-only checks on pgoriginal.com, with trackers blocked | No |
 | [Mutation score](.github/workflows/mutation.yml) | Weekly / manual / PRs touching tests or the simulation | Injects each catalogued defect and fails if fewer than 90% are detected | No |
 | [Security](.github/workflows/security.yml) | PR / push to `main` / weekly / manual | Known-vulnerability audit of the pinned dependencies (pip-audit) and workflow security analysis (zizmor) | No |
 

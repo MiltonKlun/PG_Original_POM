@@ -43,7 +43,11 @@ time in `conftest.py`:
 | `framework` | Offline checks of the framework itself (no browser/server) | Yes |
 
 `contract` additionally marks the read-only locator checks in
-`tests/test_contract.py`, which run on both targets.
+`tests/test_contract.py`, which run on both targets. `live_defect(reason)`
+marks a check that fails on live because of a known store defect: on live
+it becomes a strict expected failure (reported as `xfailed` with its defect
+ID, and failing the run once the store is fixed); on the simulation it must
+pass.
 
 A test marked both `live_safe` and `mock_only` fails collection. On
 `TARGET=live`, any UI test without `live_safe` is deselected even when `-m`
@@ -63,7 +67,7 @@ P0 = revenue or order correctness, P1 = discovery and forms.
 | RESULTS | P1 | Known term returns the product; impossible term shows empty state and no cards | `test_search.py::test_search_results`, `test_search_empty` | Mock + live |
 | RESULT-SET | P1 | Partial lowercase, exact and shared-prefix terms return exactly the expected products, and nothing else | `test_search.py::test_search_filters_catalog` (3 datasets) | Mock |
 | FILTER | P1 | Color and Talle filters check their control, return exactly the expected products, each offering the value; clearing restores the first page | `test_shop.py::test_filter_and_clear` (2 datasets) | Mock |
-| PAGINATION | P1 | Load more appends the second page with no repeats, then hides | `test_shop.py::test_load_more_catalog` | Mock |
+| PAGINATION | P1 | Scrolling to the end appends the second page with no repeats and updates `?mpage` | `test_shop.py::test_load_more_catalog` | Mock |
 | PDP | P0 | Selected card name equals PDP heading; current price parses to a positive ARS amount; add control enabled | `test_shop.py::test_shop_product_details` | Mock + live |
 | PRICE-PROMO | P0 | Returning to a discounted variant shows its price and the compare-at price | `test_shop.py::test_discounted_variant_shows_compare_price` | Mock |
 | PRICE-VARIANT | P0 | A regular-priced variant updates the price, hides compare-at and reaches the cart at that price | `test_shop.py::test_regular_variant_price_reaches_cart` | Mock |
@@ -80,13 +84,21 @@ P0 = revenue or order correctness, P1 = discovery and forms.
 | AUTH-INVALID | P1 | Named invalid credentials are rejected and the user stays on login | `test_auth.py::test_login_failure` (2 datasets) | Mock |
 | AUTH-NATIVE | P1 | Malformed/missing email and missing password are blocked client-side | `test_auth.py::test_login_native_validation` (3 cases) | Mock |
 | RESET | P1 | "Olvidaste" link reaches the reset page (optional trailing slash) with its heading | `test_auth.py::test_forgot_password_link` | Mock + live |
-| CONTACT | P1 | Fields keep seeded, accented and whitespace inputs; malformed emails are invalid; submit is never clicked | `test_contact.py::test_contact_*` (6 cases) | Fill: mock + live; disabled submit: mock |
+| CONTACT | P1 | Fields keep seeded, accented and whitespace inputs; malformed emails are invalid; submit is never clicked | `test_contact.py::test_contact_*` (6 cases) | Mock (the live form's contract is in CONTRACT) |
 | MONEY | P0 | ARS display parsing to integer minor units; ambiguous or installment text rejected; formatting round-trips | `framework/test_money.py` (30 cases) | Offline |
 | CONTRACT | P1 | Page-object locators resolve without changing state: header, cart drawer, menu panel, listing, filters, card metadata, product form and price attribute, login, contact | `test_contract.py` (7 cases) | Mock + live |
+| LISTING-DATA | P0 | Every card: positive variant prices, shown price = first variant's price, compare-at above price, "Sin stock" exactly when nothing is available | `test_catalog_integrity.py::test_listing_cards_match_their_variant_data` | Mock + live |
+| PRICE-SOURCES | P0 | Listing card price = product page price = `data-product-price` | `test_catalog_integrity.py::test_product_page_price_matches_listing` | Mock + live |
+| STRUCTURED-DATA | P1 | Product page price = its own JSON-LD offer | `test_catalog_integrity.py::test_product_page_publishes_its_price_as_structured_data` | Mock; live: strict xfail DEF-01 |
+| VARIANT-PRICE | P0 | A product with variant-based prices: each price/compare-at combination shows as published when selected | `test_catalog_integrity.py::test_variant_prices_follow_selection` | Mock + live |
+| SIZE-FILTER | P1 | First size filter option returns only products offering that size (case-insensitive) | `test_catalog_integrity.py::test_size_filter_results_offer_the_size` | Mock + live |
+| LOAD-MORE | P1 | Scrolling appends new products, keeps the first page, no repeats | `test_catalog_integrity.py::test_load_more_appends_new_products` | Mock + live |
+| PAGE-HEALTH | P1 | Home, listing, product and contact load with no uncaught JavaScript errors or failed first-party responses | `test_page_health.py::test_page_loads_without_errors` (4 pages) | Mock + live |
+| LINKS | P1 | Up to 25 crawlable home-page links (robots.txt respected) return non-error status | `test_page_health.py::test_home_links_resolve` | Mock + live |
 
-Totals: 134 collected cases, of which 44 are UI and 90 are offline framework
-checks. 19 UI cases are `live_safe`; the weekly live run selects the 11 that
-are also `smoke` or `contract`.
+Totals: 166 collected cases, of which 55 are UI and 111 are offline framework
+checks. 25 UI cases are `live_safe`, and the weekly live run executes all of
+them.
 
 ## Test data
 
@@ -100,6 +112,21 @@ are also `smoke` or `contract`.
   generated emails use `example.com`.
 - Money is compared in integer minor units, never binary floats. Expected
   display text is derived from test data with `format_ars`, not hard-coded.
+
+## Live traffic policy
+
+PG Original allowed this read-only testing for portfolio purposes. To keep
+the footprint small and honest:
+
+- Live runs are serial, weekly (plus manual runs), with no retries.
+- Ad pixels, analytics, telemetry, the recommendation widget and the store's
+  own visit counter are blocked (`config/live_policy.py`); everything the
+  page needs still loads. The site contract lists every host and decision.
+- Requests carry a `PGOriginalQA/1.0 (+repository URL)` user-agent suffix.
+- `robots.txt` disallows `/account/` and `/search/` for crawlers. The suite
+  isn't a crawler, but the link check skips every disallowed path and samples
+  at most 25 links; scenario tests visit login and search only as a user would.
+- Nothing is ever submitted: no cart, login, contact or password-reset action.
 
 ## Page object design
 
@@ -134,7 +161,7 @@ are also `smoke` or `contract`.
 |---|---|---|---|
 | Mock CI | PR / push to `main` | Static checks + framework tests (Ubuntu, Windows); all UI tests, Chromium against Docker/nginx | Yes (required checks) |
 | Compatibility | Weekly / manual | Full mock UI on Firefox and WebKit; Chromium Pixel 7 emulation smoke | No |
-| Live smoke | Weekly / manual | `(smoke or contract) and live_safe`, Chromium, serial, no retries | No; a failure stays visible |
+| Live read-only | Weekly / manual | All `live_safe` cases, Chromium, serial, no retries, trackers blocked | No; a failure stays visible |
 | Mutation score | Weekly / manual / PRs touching tests or the mock | All mutants against the mock UI suite; fails below 90% | No |
 | Security | PR / push to `main` / weekly / manual | pip-audit on both pinned requirement files, including resolved sub-dependencies; zizmor (auditor level) on all workflows | No |
 
@@ -171,14 +198,14 @@ python scripts/mutation_check.py --only M05
 | 2026-09-27 | With result-set, add-quantity, merge, persistence and partial-removal tests | 100% (13 of 13) |
 | 2026-09-27 | Simulation aligned with live markup; 6 mutants added for variant pricing, pagination, size filter and menu | 100% (19 of 19) |
 | 2026-09-28 | Page objects refactored; mutant added for controls wired only after data loads | 100% (20 of 20) |
+| 2026-09-28 | Catalog integrity checks; mutants for wrong JSON-LD price, wrong card price, missing sold-out label | 100% (23 of 23) |
 
 The weekly and pull-request workflow fails below 90%.
 
 ## Known gaps
 
-- Variant pricing, pagination and the size filter are verified in the
-  simulation; on live they're covered only by the locator contract so far.
-  Read-only live checks for them are planned.
 - Mutants cover the simulation's JavaScript only; defects in live-only
   behavior are covered by the read-only checks, not by the mutation score.
+- Live coverage is read-only by design: cart, checkout and authentication
+  behavior is verified only in the simulation.
 - No automated accessibility, visual or performance checks yet.

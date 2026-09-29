@@ -139,17 +139,37 @@ so a click during a slow response did nothing. A test that holds the catalog
 request open reproduced it on every run; wiring the controls first fixed it,
 and a new mutant keeps it from coming back.
 
+## Testing production without distorting it
+
+Read-only isn't the same as harmless. Watching the network showed that
+every live page load fired ad pixels, a recommendation widget, telemetry
+collectors and the store's own visit counter, so a weekly suite was quietly
+inflating PG Original's analytics. Live runs now abort those requests (about
+240 per run) while everything the page needs still loads, identify
+themselves with a user-agent suffix, skip `robots.txt`-disallowed paths when
+checking links, and stay serial and weekly.
+
+With that in place, the live checks go beyond "the page loads": every
+listing card's price must match the variant data it publishes, the listing,
+product page and price attribute must agree, variant prices must follow
+selection, and infinite-scroll pagination must add products without
+repeats. One check found a real defect: product pages publish JSON-LD only
+for *related* products, never for the product being viewed. That check is a
+strict expected failure on live (reported with its defect ID, and it will
+flag the day the store fixes it) and passes on the simulation, which
+publishes correct structured data.
+
 ## Results
 
 | Measure | Value |
 |---|---|
-| Collected cases | 134: 44 UI, 90 offline framework |
-| Mutation score | 20 of 20 injected defects detected (first measured at 6 of 13) |
+| Collected cases | 166: 55 UI, 111 offline framework |
+| Mutation score | 23 of 23 injected defects detected (first measured at 6 of 13) |
 | Mock run (Windows, Chromium) | ~15 s |
-| Live read-only cases | 19 (`live_safe`), 11 in the weekly live run |
+| Live read-only cases | 25 (`live_safe`), all in the weekly live run; about 240 tracking requests blocked per run |
 | Browsers | Chromium, Firefox, WebKit on the mock; Pixel 7 emulation smoke |
 | CI | Required static and framework checks on Ubuntu and Windows, plus mock UI on Ubuntu; weekly live and compatibility runs |
-| Defects in the store's markup | 5 accessibility/HTML issues documented in the [site contract](site-contract.md) |
+| Defects found in the live store | 7: missing product structured data, a failing store-app request, and 5 accessibility/HTML issues, documented in the [site contract](site-contract.md) |
 
 ## Trade-offs and limits
 
