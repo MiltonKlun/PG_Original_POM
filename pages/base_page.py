@@ -5,7 +5,7 @@ from string import Formatter
 from typing import Literal, Self
 from urllib.parse import urlsplit
 
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
 
 from components.base_component import Disclosure
 from components.cart_drawer import CartDrawer
@@ -68,9 +68,28 @@ class BasePage:
                 )
         return self.path.format(**params)
 
+    def shows_path(self, path: str) -> bool:
+        """Whether a URL path is this page's path template, with any
+        parameter values and with or without the trailing slash."""
+        pattern = _SEGMENT.pattern.join(
+            re.escape(part) for part in re.split(r"\{\w+\}", self.path.rstrip("/"))
+        )
+        return re.fullmatch(f"{pattern}/?", path) is not None
+
     def wait_for_load(self) -> None:
         """Wait for the page's subresources, not just its DOM."""
         self.page.wait_for_load_state("load")
+
+    def wait_for_content(self) -> None:
+        """Wait until the page is rendered as a user sees it: loaded, its main
+        heading shown (the storefront renders content after a data request)
+        and its fonts ready. Screenshots need this state."""
+        # After a click, the previous page (and its heading) is still shown
+        # until navigation commits: wait until this page's own path is shown.
+        self.page.wait_for_url(lambda url: self.shows_path(urlsplit(url).path))
+        self.wait_for_load()
+        expect(self.heading).to_be_visible()
+        self.page.evaluate("() => document.fonts.ready.then(() => true)")
 
     def linked_paths(self) -> list[str]:
         """Unique same-origin link paths on the page, sorted."""

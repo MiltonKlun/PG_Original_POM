@@ -10,7 +10,7 @@ PAGES = ["home", "shop", "product", "login", "contact"]
 
 @pytest.mark.parametrize("opened_page", PAGES, indirect=True)
 def test_page_matches_baseline(opened_page, visual_check, request):
-    opened_page.wait_for_load()
+    opened_page.wait_for_content()
     visual_check(opened_page.page, request.node.callspec.params["opened_page"])
 
 

@@ -1,14 +1,15 @@
 """Compare screenshots with reviewed baseline images.
 
-Baselines are stored per platform (fonts render differently on Windows and
-Linux) and only change through a reviewed commit. A pixel counts as changed
-when any color channel differs by more than PIXEL_TOLERANCE, which absorbs
-anti-aliasing noise; the comparison fails when more than MAX_CHANGED_PIXELS
-change or when the image size differs. The budget is absolute: recoloring one
-short line of text changes about 340 pixels, and repeated runs change none.
+Rendering depends on the machine's fonts, so baselines are rendered in one
+reference environment: Playwright's Docker image for the pinned Playwright
+version (REFERENCE_IMAGE), in CI and locally (scripts/visual.py). They only
+change through a reviewed commit. A pixel counts as changed when any color
+channel differs by more than PIXEL_TOLERANCE, which absorbs anti-aliasing
+noise; the comparison fails when more than MAX_CHANGED_PIXELS change or when
+the image size differs. The budget is absolute: recoloring one short line of
+text changes about 340 pixels, and repeated runs change none.
 """
 
-import sys
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
@@ -16,13 +17,17 @@ from pathlib import Path
 from PIL import Image, ImageChops
 
 BASELINES = Path(__file__).resolve().parents[1] / "tests" / "visual"
+REFERENCE_IMAGE = (
+    "mcr.microsoft.com/playwright/python:v1.62.0-noble"
+    "@sha256:aa81288e738725378becba5b3e06cb0f3a7f012a610e87e8d767a090ea3f740d"
+)
 PIXEL_TOLERANCE = 16
 MAX_CHANGED_PIXELS = 25
 HIGHLIGHT = (255, 0, 64)
 
 
-def baseline_path(name: str, platform: str = sys.platform) -> Path:
-    return BASELINES / f"{name}-{platform}.png"
+def baseline_path(name: str) -> Path:
+    return BASELINES / f"{name}.png"
 
 
 @dataclass(frozen=True)

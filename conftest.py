@@ -40,6 +40,11 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="TARGET=live only: record each test's traffic as a HAR in DIR",
     )
     parser.addoption(
+        "--visual",
+        action="store_true",
+        help="Compare screenshots with baselines (reference container only)",
+    )
+    parser.addoption(
         "--update-baselines",
         action="store_true",
         help="Write visual baselines for review instead of comparing",

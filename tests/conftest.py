@@ -269,6 +269,11 @@ def visual_check(
     pytestconfig: pytest.Config, browser_name: str, output_path: str
 ) -> VisualCheck:
     """Compare a screenshot with its reviewed baseline (config/visual.py)."""
+    update = pytestconfig.getoption("update_baselines")
+    if not (update or pytestconfig.getoption("visual")):
+        # Fonts differ between machines: only the reference container's
+        # rendering matches the baselines.
+        pytest.skip("Visual checks run in the reference container: scripts/visual.py")
     if browser_name != "chromium" or pytestconfig.getoption("device"):
         pytest.skip("Visual baselines are reviewed for desktop Chromium only")
 
@@ -280,7 +285,7 @@ def visual_check(
         else:
             actual = target.screenshot(animations="disabled", caret="hide")
         baseline = baseline_path(name)
-        if pytestconfig.getoption("update_baselines"):
+        if update:
             baseline.parent.mkdir(parents=True, exist_ok=True)
             baseline.write_bytes(actual)
             return
@@ -289,8 +294,8 @@ def visual_check(
         if not baseline.is_file():
             (evidence / f"{name}-actual.png").write_bytes(actual)
             pytest.fail(
-                f"No reviewed baseline {baseline.name}: run with --update-baselines,"
-                " review the image and commit it"
+                f"No reviewed baseline {baseline.name}: run scripts/visual.py"
+                " --update, review the image and commit it"
             )
         result = compare_images(actual, baseline.read_bytes())
         if not result.passed:

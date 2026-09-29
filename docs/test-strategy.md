@@ -107,9 +107,10 @@ P0 = revenue or order correctness, P1 = discovery and forms.
 | KEY-ESCAPE | P1 | Escape closes the panel and returns focus to its trigger | `test_keyboard.py::test_escape_closes_panel_and_returns_focus` (3) | Mock; live: DEF-05 |
 | KEY-CLOSE | P1 | Each panel's close control has an accessible name and takes keyboard focus | `test_keyboard.py::test_close_control_is_named_and_focusable` (3) | Mock; live: DEF-04 |
 
-Totals: 204 collected cases, of which 73 are UI and 131 are offline framework
+Totals: 241 collected cases, of which 79 are UI and 162 are offline framework
 checks. 43 UI cases are `live_safe`, and the weekly live run executes all of
-them; 9 of those are strict expected failures for known store defects.
+them; 11 of those are strict expected failures for known store defects. The
+snapshot target replays 42 of them offline.
 
 ## Test data
 
@@ -195,14 +196,19 @@ committed snapshot is a reviewed change like any other.
 
 `tests/test_visual.py` compares full-page screenshots of five simulation
 pages, and the cart drawer with one item, with baselines in `tests/visual/`.
-Fonts render differently per operating system, so each baseline is stored
-per platform (`home-win32.png`, `home-linux.png`) and only for desktop
-Chromium. A pixel counts as changed when a color channel differs by more
+Rendering depends on the fonts a machine has, so baselines are rendered in
+one reference environment: Playwright's Docker image for the pinned
+Playwright version, pinned by digest. CI runs the visual job in that image,
+and `python -m scripts.visual` runs the same checks locally through Docker.
+Everywhere else the visual tests are skipped with that reason; a framework
+check keeps the image, CI and the Playwright pin in step. Screenshots are
+taken once the page shows its own URL, its heading and loaded fonts, since
+the storefront renders content after a data request. A pixel counts as changed when a color channel differs by more
 than 16; more than 25 changed pixels, or a size change, fails the test and
 keeps the actual, expected and highlighted diff images. Recoloring one
 struck-through price changes about 340 pixels; repeated runs change none.
-Baselines are written with `--update-baselines`, reviewed as images in the
-pull request, and never updated by CI. The live store is not compared
+Baselines are written with `python -m scripts.visual --update`, reviewed as
+images in the pull request, and never updated by CI. The live store is not compared
 visually: its content changes daily.
 
 ## Page object design
@@ -236,7 +242,8 @@ visually: its content changes daily.
 
 | Pipeline | Trigger | Selection | Blocking |
 |---|---|---|---|
-| Mock CI | PR / push to `main` | Static checks + framework tests (Ubuntu, Windows); all UI tests including visual, Chromium against Docker/nginx | Yes (required checks) |
+| Mock CI | PR / push to `main` | Static checks + framework tests (Ubuntu, Windows); all UI tests except visual, Chromium against Docker/nginx | Yes (required checks) |
+| Visual (Mock CI job) | PR / push to `main` | Screenshot comparison in the reference container, Chromium | No |
 | Snapshot UI (Mock CI job) | PR / push to `main` | Replayable `live_safe` cases on the recorded store, Chromium, offline | No |
 | Snapshot refresh | Weekly / manual | Re-record live, selector drift check, replay on the new recording; opens an issue on drift | No |
 | Compatibility | Weekly / manual | Full mock UI on Firefox and WebKit; Chromium Pixel 7 emulation smoke | No |
@@ -280,6 +287,7 @@ python scripts/mutation_check.py --only M05
 | 2026-09-27 | Simulation aligned with live markup; 6 mutants added for variant pricing, pagination, size filter and menu | 100% (19 of 19) |
 | 2026-09-28 | Page objects refactored; mutant added for controls wired only after data loads | 100% (20 of 20) |
 | 2026-09-28 | Catalog integrity checks; mutants for wrong JSON-LD price, wrong card price, missing sold-out label | 100% (23 of 23) |
+| 2026-09-29 | Accessibility checks; mutants for Escape, focus on open, unnamed close control, low-contrast price | 100% (27 of 27) |
 
 The weekly and pull-request workflow fails below 90%.
 
@@ -292,8 +300,8 @@ The weekly and pull-request workflow fails below 90%.
 - Accessibility checks cover WCAG A/AA rules axe can evaluate and keyboard
   operation of the header panels; screen-reader output and zoom/reflow are
   not tested.
-- Visual baselines cover the simulation only, on desktop Chromium; there
-  are no performance checks.
+- Visual baselines cover the simulation only, on desktop Chromium in the
+  reference container; there are no performance checks.
 - A snapshot shows the store as recorded. Between refreshes, only the
   weekly live run shows today's store.
 - Cart and checkout on a real storefront: a separate Tiendanube trial store

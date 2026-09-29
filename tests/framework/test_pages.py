@@ -5,6 +5,7 @@ import pytest
 from pages.contact_page import ContactPage
 from pages.home_page import HomePage
 from pages.product_page import ProductPage
+from pages.shop_page import ShopPage
 
 pytestmark = pytest.mark.framework
 
@@ -42,3 +43,21 @@ def test_components_are_built_on_first_use():
     assert "cart" not in vars(home)
     assert home.cart is home.cart
     assert home.cart.trigger is home.navbar.cart_link
+
+
+@pytest.mark.parametrize(
+    "page_class,path,shown",
+    [
+        (ProductPage, "/productos/qa-remera/", True),
+        (ProductPage, "/productos/qa-remera", True),
+        (ProductPage, "/productos/", False),
+        (ProductPage, "/productos/a/b/", False),
+        (ShopPage, "/productos/", True),
+        (ShopPage, "/productos/qa-remera/", False),
+        (HomePage, "/", True),
+        (HomePage, "/contacto/", False),
+    ],
+)
+def test_each_page_recognizes_its_own_path(page_class, path, shown):
+    # Content waits rely on this to tell the new page from the previous one.
+    assert page_class(MagicMock()).shows_path(path) is shown
