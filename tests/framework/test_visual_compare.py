@@ -7,6 +7,7 @@ from config.visual import (
     HIGHLIGHT,
     MAX_CHANGED_PIXELS,
     PIXEL_TOLERANCE,
+    REFERENCE_IMAGE,
     baseline_path,
     compare_images,
 )
@@ -62,6 +63,6 @@ def test_a_size_change_fails_and_still_produces_a_diff():
     assert Image.open(BytesIO(result.diff_png)).size == (100, 106)
 
 
-def test_baselines_are_kept_per_platform():
-    assert baseline_path("home", "linux").name == "home-linux.png"
-    assert baseline_path("home", "win32").name == "home-win32.png"
+def test_one_baseline_per_view_from_the_reference_environment():
+    assert baseline_path("home").name == "home.png"
+    assert REFERENCE_IMAGE.startswith("mcr.microsoft.com/playwright/python:v")

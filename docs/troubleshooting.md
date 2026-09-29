@@ -48,11 +48,14 @@ the change is intended, rewrite the baselines and review them in the pull
 request:
 
 ```text
-python -m pytest tests/test_visual.py --update-baselines
+python -m scripts.visual --update
 ```
 
-Baselines exist per platform. On a platform without one the test fails and
-keeps the actual image, which can be reviewed and committed as the baseline.
+Visual checks only compare in the reference container (Playwright's Docker
+image, see `config/visual.py`); elsewhere they are skipped with that reason.
+`python -m scripts.visual` needs Docker and writes reports and evidence into
+the checkout as usual. `--visual` forces a comparison on the host, where
+different fonts are expected to fail it.
 
 ## Evidence
 

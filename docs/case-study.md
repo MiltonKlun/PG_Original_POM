@@ -173,23 +173,67 @@ The simulation now implements the accessible behavior, with mutants that
 remove it, and the live defects are strict expected failures, so the
 weekly report shows exactly which are still open.
 
+## Real markup, without touching the store
+
+The mock proves the tests detect wrong outcomes; the weekly live run proves
+the page objects still fit the real site. In between, pull requests had no
+way to exercise real markup. I added a third target: the read-only live
+suite records its traffic once, a script merges and sanitizes it (no
+cookies, placeholder images, no trackers or bot challenges), and
+`TARGET=snapshot` replays it through Playwright's HAR routing. Anything the
+recording lacks is aborted. To prove the replay never reaches the network, I
+ran it behind a proxy that refuses every connection: a live test failed at
+once, and the whole snapshot suite passed. A weekly job re-records the store
+and compares the selectors the page objects use on both recordings, so a
+theme change opens an issue instead of silently breaking the next live run.
+
+The first pull-request run of the snapshot job failed on the login page, in
+fixture setup rather than in a test. The trace showed the cookie banner's
+dismiss control resolved but hidden, then visible a moment later. The store's
+script shows the banner after load; when it appeared just after my 500 ms
+wait, the fallback check saw it visible and raised instead of dismissing it.
+The snapshot's heavier parallel load made the timing visible, but the same
+race existed on live. The fix dismisses a banner that turns up late and still
+fails on one that can't be dismissed; repeated parallel runs and a live
+check passed afterwards.
+
+The refresh job's own first run on `main` also failed: its replay step
+reused the recording's run ID, and the single-use rule refused it. That
+opened a false drift issue, which I closed with the cause and fixed in the
+workflow. The selector comparison in the same run had found no drift.
+
+Screenshots of the simulation are now compared with reviewed baselines. I
+set the budget from measurement, not guesswork: recoloring one struck-through
+price changes about 345 pixels, and repeated runs change none, so the limit
+is 25. My first baselines were per platform: Windows from my machine, Linux
+from the CI runner. A clean clone on a plain Ubuntu machine failed all six,
+because its fonts differed from the runner's. Baselines now come from one
+pinned environment, Playwright's Docker image, in CI and locally; normal runs
+skip the visual checks and say why. Repeating the comparison in that image
+then exposed a flaky screenshot of the product page taken before its content
+rendered. Waiting for the page's own URL, its heading and its fonts fixed it:
+eight repeated runs, no changes.
+
 ## Results
 
 | Measure | Value |
 |---|---|
-| Collected cases | 187: 73 UI, 114 offline framework |
+| Collected cases | 241: 79 UI, 162 offline framework |
 | Mutation score | 27 of 27 injected defects detected (first measured at 6 of 13) |
-| Mock run (Windows, Chromium) | ~15 s |
-| Live read-only cases | 43 (`live_safe`), all in the weekly live run, 9 of them expected failures for known store defects; about 240 tracking requests blocked per run |
+| Mock run (Windows, Chromium) | 44 s serial, 22 s with parallel workers |
+| Snapshot replay | 42 live-safe checks on recorded live markup, offline, on every pull request |
+| Live read-only cases | 43 (`live_safe`), all in the weekly live run, 11 of them expected failures for known store defects; about 240 tracking requests blocked per run |
 | Browsers | Chromium, Firefox, WebKit on the mock; Pixel 7 emulation smoke |
-| CI | Required static and framework checks on Ubuntu and Windows, plus mock UI on Ubuntu; weekly live and compatibility runs |
-| Defects found in the live store | 8, tracked by `live_defect` checks and reported privately to the client; one earlier finding withdrawn after inspection |
+| CI | Required static and framework checks on Ubuntu and Windows, plus mock UI on Ubuntu; visual checks in a pinned container and snapshot replay on every pull request; weekly live, snapshot refresh and compatibility runs; nightly flaky-test check |
+| Defects found in the live store | 8, reported privately to the client; 6 tracked by `live_defect` checks; one earlier finding withdrawn after inspection |
 
 ## Trade-offs and limits
 
 The mock trades backend realism for reproducibility. Its cart, login
 rejection and form states are simulated, so passing them says nothing about
 production checkout, payments, email delivery or authentication. The live
-checks are deliberately narrow. With a resettable client staging store, the
-same POM and target seam could run cart and checkout flows against real
-platform logic.
+checks are deliberately narrow. A separate trial store was considered for
+cart and checkout and not adopted: it would need an account owned by the
+store, its theme would differ, and checkout would still need a payment
+sandbox. With a resettable client staging store, the same POM and target
+seam could run those flows against real platform logic.

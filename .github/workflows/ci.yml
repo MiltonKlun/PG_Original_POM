@@ -107,6 +107,35 @@ jobs:
           retention-days: 14
           if-no-files-found: error
 
+  visual:
+    name: Visual (Chromium, reference container)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # Baselines are rendered in this image (config/visual.py REFERENCE_IMAGE).
+    container:
+      image: mcr.microsoft.com/playwright/python:v1.62.0-noble@sha256:aa81288e738725378becba5b3e06cb0f3a7f012a610e87e8d767a090ea3f740d
+      options: --ipc=host
+    env:
+      TARGET: mock
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: python -m pip install --root-user-action=ignore -r requirements.txt
+      - run: python -m pytest tests -m visual --visual --browser chromium --run-id visual-chromium
+      - name: Summarize results
+        if: always()
+        run: python scripts/ci_summary.py reports/visual-chromium/summary.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: visual-chromium-${{ github.run_attempt }}
+          path: |
+            reports/
+            test-results/
+          retention-days: 14
+          if-no-files-found: error
+
   snapshot-ui:
     name: Snapshot UI (Chromium)
     runs-on: ubuntu-24.04
