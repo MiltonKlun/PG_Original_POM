@@ -1,3 +1,4 @@
+import re
 import pytest
 from playwright.sync_api import expect
 from config.money import ars_minor_units, format_ars
@@ -41,7 +42,7 @@ def test_load_more_catalog(shop_page, test_data):
     shop_page.load_more()
     expect(shop_page.cards).to_have_count(len(catalog.products))
     assert sorted(shop_page.displayed_names()) == list(catalog.products)
-    expect(shop_page.load_more_button).to_be_hidden()
+    expect(shop_page.page).to_have_url(re.compile(r"[?&]mpage=2\b"))
 
 
 @pytest.mark.shop

@@ -184,8 +184,8 @@
       "file": "mock_site/app.js",
       "edits": [
         {
-          "find": "main.innerHTML = productHTML(product);",
-          "replace": "main.innerHTML = productHTML(product).replace(/<h1>.*?<\\/h1>/, '<h1>' + escapeHTML(products[0].name) + '</h1>');"
+          "find": "main.innerHTML = productHTML(product, products.find(p => p !== product));",
+          "replace": "main.innerHTML = productHTML(product, products.find(p => p !== product)).replace(/<h1>.*?<\\/h1>/, '<h1>' + escapeHTML(products[0].name) + '</h1>');"
         }
       ],
       "killed_by": [
@@ -233,7 +233,8 @@
         }
       ],
       "killed_by": [
-        "test_load_more_catalog"
+        "test_load_more_catalog",
+        "test_load_more_appends_new_products"
       ]
     },
     {
@@ -291,6 +292,49 @@
       ],
       "killed_by": [
         "test_page_controls_work_before_catalog_loads"
+      ]
+    },
+    {
+      "id": "M21",
+      "description": "Structured data (JSON-LD) advertises a different variant's price",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "price: String(first.price / 100)",
+          "replace": "price: String(product.variants[product.variants.length - 1].price / 100)"
+        }
+      ],
+      "killed_by": [
+        "test_product_page_publishes_its_price_as_structured_data"
+      ]
+    },
+    {
+      "id": "M22",
+      "description": "Listing card shows the highest variant price instead of the default",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "<span class=\"js-price-display\">${moneyShort(first.price)}</span>",
+          "replace": "<span class=\"js-price-display\">${moneyShort(Math.max(...product.variants.map(v => v.price)))}</span>"
+        }
+      ],
+      "killed_by": [
+        "test_listing_cards_match_their_variant_data",
+        "test_product_page_price_matches_listing"
+      ]
+    },
+    {
+      "id": "M23",
+      "description": "Sold-out product card is missing its 'Sin stock' label",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "${product.available ? '' : '<p>Sin stock</p>'}</div></article>",
+          "replace": "</div></article>"
+        }
+      ],
+      "killed_by": [
+        "test_listing_cards_match_their_variant_data"
       ]
     }
   ]

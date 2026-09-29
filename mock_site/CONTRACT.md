@@ -10,7 +10,8 @@ No external assets, analytics, authentication, email or payment services exist.
 | `/` | Brand/title, header/footer; SHOP link opens products | Home / HOME |
 | Every page | Buscador opens/focuses `#nav-search`; close hides it; form GET `/search/?q=...` | Navbar, SearchModal / SEARCH |
 | `/productos/` | Five synthetic products, four per page; uniquely named `.item-link`/`.item-name`; card `data-variants` carries per-variant `optionN`, `price_number_raw` and compare-at values | Shop / PDP |
-| Load more | `.js-load-more` "Mostrar más productos" appends the next page without repeats, updates `?mpage=N` and hides when everything is shown | Shop / pagination |
+| Pagination | Scrolling to the end of the list appends the next page without repeats and updates `?mpage=N` (infinite scroll, as live); the `.js-load-more` fallback stays hidden | Shop / pagination |
+| Product pages | JSON-LD `Product` for the viewed product (offer price of the default variant in whole units, keyed by page URL) plus one related product, as the live store embeds related products | Product / structured data |
 | `/search/` | Case-insensitive name substring; unknown query displays `No encontramos nada para` and no cards | Shop / search results |
 | `/productos/?Color=…`, `?Talle=…` | Visible Color and Talle labels (`data-filter-name`/`data-filter-value`, text with result count) toggle checked state; results include only products offering that value; `Borrar filtros` restores the first page | Shop / filter |
 | `/productos/qa-remera/` | QA Remera, sizes S/M, colors Negro/Blanco. Negro 29,000 ARS with compare-at 39,000; Blanco 39,000 without compare-at. `#price_display` (`data-product-price`) and `#compare_price_display` follow the selected variant | Product / CART-ADD / pricing |
