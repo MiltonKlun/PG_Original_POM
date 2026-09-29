@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+
 import pytest
 from playwright.sync_api import expect
+
 from components.cart_drawer import CartDrawer
 from config.money import format_ars
 from config.test_data import SuiteData, VariantProduct

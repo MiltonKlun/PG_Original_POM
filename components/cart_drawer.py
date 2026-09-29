@@ -1,4 +1,5 @@
 from playwright.sync_api import Locator, expect
+
 from components.base_component import BaseComponent
 from config import ui_text
 

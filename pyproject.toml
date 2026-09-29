@@ -1,7 +1,14 @@
-[tool.black]
+[tool.ruff]
 line-length = 88
-target-version = ['py312']
-extend-exclude = '/(\.venv[^/]*|logs|test-results|proofs)/'
+target-version = "py312"
+extend-exclude = ["logs", "test-results", "proofs", "reports", "private"]
+
+[tool.ruff.lint]
+# pycodestyle, pyflakes, isort, bugbear, pyupgrade, simplify
+select = ["E", "W", "F", "I", "B", "UP", "SIM"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["components", "config", "pages", "scripts", "tests"]
 
 [tool.mypy]
 python_version = "3.12"

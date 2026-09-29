@@ -1,5 +1,7 @@
 import json
+
 import pytest
+
 from scripts.mutation_check import (
     ROOT,
     Edit,

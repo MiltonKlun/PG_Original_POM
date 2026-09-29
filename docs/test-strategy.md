@@ -102,7 +102,7 @@ P0 = revenue or order correctness, P1 = discovery and forms.
 | KEY-ESCAPE | P1 | Escape closes the panel and returns focus to its trigger | `test_keyboard.py::test_escape_closes_panel_and_returns_focus` (3) | Mock; live: DEF-05 |
 | KEY-CLOSE | P1 | Each panel's close control has an accessible name and takes keyboard focus | `test_keyboard.py::test_close_control_is_named_and_focusable` (3) | Mock; live: DEF-04 |
 
-Totals: 187 collected cases, of which 73 are UI and 114 are offline framework
+Totals: 204 collected cases, of which 73 are UI and 131 are offline framework
 checks. 43 UI cases are `live_safe`, and the weekly live run executes all of
 them; 9 of those are strict expected failures for known store defects.
 
@@ -153,6 +153,20 @@ the open-panel scans found five issues (DEF-03 to DEF-07, tracked by
 `live_defect` markers and reported privately to the client). Automated
 scanning is a floor, not a verdict.
 
+## Parallel execution and flakiness
+
+The simulation suite runs in parallel with pytest-xdist (`-n auto`). Each
+worker serves the simulation on its own port (`gw0` on 8091, `gw1` on 8092,
+...), or shares an explicitly supplied server such as CI's Docker/nginx
+container. Only the controller writes reports; workers put browser evidence
+in the same run directory and write their own log files. Every test uses its
+own browser context and cart storage, so tests share no state. Live runs are
+refused in parallel: the store sees one browser at a time.
+
+`scripts/flaky_check.py` runs the suite several times and compares each
+test's outcome across runs. Nothing is retried or hidden: a test whose result
+changes is flaky, and one that fails every time is reported as failing.
+
 ## Page object design
 
 - Pages extend a small `BasePage` that declares a relative `path` template
@@ -187,7 +201,9 @@ scanning is a floor, not a verdict.
 | Mock CI | PR / push to `main` | Static checks + framework tests (Ubuntu, Windows); all UI tests, Chromium against Docker/nginx | Yes (required checks) |
 | Compatibility | Weekly / manual | Full mock UI on Firefox and WebKit; Chromium Pixel 7 emulation smoke | No |
 | Live read-only | Weekly / manual | All `live_safe` cases, Chromium, serial, no retries, trackers blocked | No; a failure stays visible |
-| Mutation score | Weekly / manual / PRs touching tests or the mock | All mutants against the mock UI suite; fails below 90% | No |
+| Mutation score | Weekly / manual / PRs touching tests or the mock | All mutants against the mock UI suite, run in parallel; fails below 90% | No |
+| Flaky test check | Nightly / manual | Five parallel runs of the simulation suite, no retries; any outcome change fails | No |
+| Test report | Push to `main` / manual | Simulation suite in parallel; HTML report published to GitHub Pages | No |
 | Security | PR / push to `main` / weekly / manual | pip-audit on both pinned requirement files, including resolved sub-dependencies; zizmor (auditor level) on all workflows | No |
 
 A change is ready when the required checks are green with no unexplained

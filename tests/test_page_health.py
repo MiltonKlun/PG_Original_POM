@@ -1,6 +1,7 @@
 """Read-only page health checks that run on both targets."""
 
 import pytest
+
 from config.live_policy import crawl_allowed
 
 pytestmark = pytest.mark.live_safe

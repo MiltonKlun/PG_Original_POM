@@ -3,7 +3,9 @@ import re
 from decimal import Decimal
 from typing import Any
 from urllib.parse import urlsplit
+
 from playwright.sync_api import Page, expect
+
 from config import ui_text
 from pages.base_page import BasePage
 

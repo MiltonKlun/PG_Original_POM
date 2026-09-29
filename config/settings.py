@@ -1,8 +1,27 @@
 """Resolve the execution target before any browser navigation."""
 
+import re
 from dataclasses import dataclass
 from typing import Self
 from urllib.parse import urlsplit
+
+MOCK_PORT = 8090
+
+
+def worker_port(worker: str | None, base: int = MOCK_PORT) -> int:
+    """Each pytest-xdist worker (gw0, gw1, ...) serves the mock on its own port."""
+    if not worker:
+        return base
+    match = re.fullmatch(r"gw(\d+)", worker)
+    if match is None:
+        raise ValueError(f"Unexpected pytest-xdist worker id: {worker!r}")
+    return base + 1 + int(match[1])
+
+
+def check_parallel(target: str, workers: object) -> None:
+    """Live runs stay serial so the store sees one browser at a time."""
+    if target == "live" and workers not in (None, 0, "0"):
+        raise ValueError("Live runs are serial: remove -n/--numprocesses")
 
 
 @dataclass(frozen=True)
@@ -17,12 +36,16 @@ class Settings:
 
     @classmethod
     def resolve(
-        cls, target: str = "mock", base_url: str | None = None, seed: int = 1729
+        cls,
+        target: str = "mock",
+        base_url: str | None = None,
+        seed: int = 1729,
+        mock_port: int = MOCK_PORT,
     ) -> Self:
         if target not in {"mock", "live"}:
             raise ValueError("TARGET must be 'mock' or 'live'")
         default = (
-            "http://127.0.0.1:8090"
+            f"http://127.0.0.1:{mock_port}"
             if target == "mock"
             else "https://www.pgoriginal.com"
         )

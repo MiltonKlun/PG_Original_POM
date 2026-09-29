@@ -1,4 +1,5 @@
 import pytest
+
 from config.test_data import contact_data, load_data
 
 pytestmark = pytest.mark.framework

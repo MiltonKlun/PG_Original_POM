@@ -12,19 +12,21 @@ def render(path: Path) -> str:
     junit = ElementTree.parse(summary["junit"])
     cases = len(junit.findall(".//testcase"))
     counts = summary["counts"]
+    deselected = summary["deselected"]
+    if deselected is None:
+        deselected = "n/a (parallel run)"
     lines = [
         f"## PG Original: {summary['target']}",
         "",
         f"Revision: `{summary['revision']}`",
         f"Browser: {', '.join(summary['browser'])}; "
         f"device: {summary['device'] or 'desktop'}; seed: {summary['seed']}",
-        f"Exit code: {summary['exit_code']}; "
-        f"duration: {summary['duration_seconds']}s",
+        f"Exit code: {summary['exit_code']}; duration: {summary['duration_seconds']}s",
         "",
         "| Result | Count |",
         "|---|---:|",
         *[f"| {name} | {value} |" for name, value in counts.items()],
-        f"| deselected | {summary['deselected']} |",
+        f"| deselected | {deselected} |",
         f"| collection errors | {summary['collection_errors']} |",
         f"| JUnit cases | {cases} |",
         "",

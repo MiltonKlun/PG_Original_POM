@@ -5,6 +5,7 @@ known defects, reported as strict expected failures there.
 """
 
 import re
+
 import pytest
 from playwright.sync_api import expect
 

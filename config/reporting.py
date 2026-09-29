@@ -4,13 +4,12 @@ import json
 import re
 import subprocess
 from collections import Counter
-from datetime import datetime, timezone
+from collections.abc import Sequence
+from datetime import UTC, datetime
 from pathlib import Path
 from time import monotonic
-from uuid import uuid4
-
-from collections.abc import Sequence
 from typing import Any
+from uuid import uuid4
 
 import pytest
 from pytest_metadata.plugin import metadata_key
@@ -53,7 +52,7 @@ class RunReport:
         browsers = config.getoption("browser") or ["chromium"]
         run_id = config.getoption("run_id") or (
             f"{settings.target}-{'-'.join(browsers)}-"
-            f"{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}-{uuid4().hex[:8]}"
+            f"{datetime.now(UTC):%Y%m%dT%H%M%SZ}-{uuid4().hex[:8]}"
         )
         if not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", run_id):
             raise pytest.UsageError(
@@ -71,10 +70,12 @@ class RunReport:
         config.option.self_contained_html = True
         if config.option.output == "test-results":
             config.option.output = str(root / "test-results" / run_id)
+        self.log_stem = root / "logs" / run_id
         if not config.option.log_file:
-            log = root / "logs" / f"{run_id}.log"
-            log.parent.mkdir(exist_ok=True)
-            config.option.log_file = str(log)
+            self.log_stem.parent.mkdir(exist_ok=True)
+            config.option.log_file = f"{self.log_stem}.log"
+        # Under pytest-xdist, collection and deselection happen in the workers.
+        self.workers = config.getoption("numprocesses", None)
         self.metadata = {
             "run_id": run_id,
             "target": settings.target,
@@ -83,11 +84,17 @@ class RunReport:
             "device": config.getoption("device"),
             "seed": settings.seed,
             "revision": revision(root),
-            "started_utc": datetime.now(timezone.utc).isoformat(),
+            "started_utc": datetime.now(UTC).isoformat(),
             "browser_artifacts": str(Path(config.option.output)),
             "junit": config.option.xmlpath,
             "html": config.option.htmlpath,
         }
+
+    @pytest.hookimpl(optionalhook=True)
+    def pytest_configure_node(self, node: Any) -> None:
+        # Workers put browser evidence and logs next to the controller's.
+        node.workerinput["pg_output"] = self.config.option.output
+        node.workerinput["pg_log_stem"] = str(self.log_stem)
 
     def pytest_sessionstart(self, session: pytest.Session) -> None:
         session.config.stash[metadata_key].update(self.metadata)
@@ -122,7 +129,9 @@ class RunReport:
             **self.metadata,
             "exit_code": int(exitstatus),
             "counts": counts,
-            "deselected": self.deselected,
+            "parallel_workers": self.workers or 0,
+            # Workers deselect in their own processes: not counted here.
+            "deselected": None if self.workers else self.deselected,
             "collection_errors": self.collection_errors,
             "duration_seconds": round(monotonic() - self.started, 3),
             "tests": self.records,

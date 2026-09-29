@@ -1,0 +1,30 @@
+# Git hooks that run the same checks as CI's Quality job, with the pinned tools
+# from requirements-dev.txt. With the project virtual environment activated:
+#   python -m pip install -r requirements-dev.txt
+#   python -m pre_commit install
+#   python -m pre_commit run --all-files   # optional: check everything now
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: ruff format
+        entry: python -m ruff format
+        language: system
+        types: [python]
+      - id: ruff-check
+        name: ruff check
+        entry: python -m ruff check --fix
+        language: system
+        types: [python]
+      - id: mypy
+        name: mypy
+        entry: python -m mypy
+        language: system
+        types: [python]
+        pass_filenames: false
+      - id: framework-tests
+        name: framework tests (offline, no browser)
+        entry: python -m pytest tests/framework -q -p no:cacheprovider -p no:pg-run-report
+        language: system
+        types: [python]
+        pass_filenames: false

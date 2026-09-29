@@ -4,7 +4,9 @@ from functools import cached_property
 from string import Formatter
 from typing import Literal, Self
 from urllib.parse import urlsplit
+
 from playwright.sync_api import Page
+
 from components.base_component import Disclosure
 from components.cart_drawer import CartDrawer
 from components.cookie_banner import CookieBanner

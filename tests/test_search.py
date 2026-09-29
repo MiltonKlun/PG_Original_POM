@@ -1,5 +1,6 @@
 import pytest
 from playwright.sync_api import expect
+
 from config.test_data import load_data
 
 

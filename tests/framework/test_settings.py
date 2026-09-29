@@ -1,5 +1,6 @@
 import pytest
-from config.settings import Settings, eligible
+
+from config.settings import Settings, check_parallel, eligible, worker_port
 
 pytestmark = pytest.mark.framework
 
@@ -43,3 +44,28 @@ def test_live_enforcement():
     assert eligible({"mock_only"}, "mock")
     with pytest.raises(ValueError, match="both"):
         eligible({"live_safe", "mock_only"}, "mock")
+
+
+@pytest.mark.parametrize(
+    "worker,port", [(None, 8090), ("", 8090), ("gw0", 8091), ("gw7", 8098)]
+)
+def test_each_parallel_worker_gets_its_own_mock_port(worker, port):
+    assert worker_port(worker) == port
+
+
+def test_unexpected_worker_id_is_rejected():
+    with pytest.raises(ValueError):
+        worker_port("worker-1")
+
+
+@pytest.mark.parametrize("workers", [None, 0, "0"])
+def test_serial_runs_are_allowed_on_both_targets(workers):
+    check_parallel("live", workers)
+    check_parallel("mock", workers)
+
+
+@pytest.mark.parametrize("workers", [2, "auto", "logical"])
+def test_live_runs_cannot_be_parallel(workers):
+    check_parallel("mock", workers)
+    with pytest.raises(ValueError, match="serial"):
+        check_parallel("live", workers)

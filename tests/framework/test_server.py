@@ -1,7 +1,10 @@
 from http.client import HTTPConnection
-from urllib.request import urlopen
 from urllib.error import HTTPError
+from urllib.request import urlopen
+
 import pytest
+
+from config.settings import Settings
 from scripts.serve_mock import (
     PUBLIC_DIRS,
     PUBLIC_FILES,
@@ -10,7 +13,6 @@ from scripts.serve_mock import (
     mock_target,
     verify_mock,
 )
-from config.settings import Settings
 
 pytestmark = pytest.mark.framework
 
@@ -50,15 +52,16 @@ def test_wrong_application_and_occupied_port(tmp_path):
     with MockServer(port=0, root=tmp_path) as other:
         with pytest.raises(RuntimeError, match="identity mismatch"):
             verify_mock(other.url, timeout=1)
-        with pytest.raises(RuntimeError, match="occupied"):
-            with MockServer(port=other.server.server_port):
-                pass
+        with (
+            pytest.raises(RuntimeError, match="occupied"),
+            MockServer(port=other.server.server_port),
+        ):
+            pass
 
 
 def test_cleanup_on_failure():
-    with pytest.raises(ValueError):
-        with MockServer(port=0) as server:
-            raise ValueError("test failed")
+    with pytest.raises(ValueError), MockServer(port=0) as server:
+        raise ValueError("test failed")
     assert not server.thread.is_alive()
 
 

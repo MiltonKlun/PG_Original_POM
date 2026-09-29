@@ -5,8 +5,10 @@ or product is hard-coded, and they never add to cart.
 """
 
 from typing import Any
+
 import pytest
 from playwright.sync_api import expect
+
 from config.money import ars_minor_units
 
 pytestmark = [pytest.mark.shop, pytest.mark.live_safe]

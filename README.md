@@ -66,7 +66,7 @@
 | **Correct money handling** | ARS prices (`$29.000,00`) parsed into integer minor units with a strict parser that rejects instalment and ambiguous text. |
 | **Accessibility** | axe-core WCAG 2.1 A/AA scans (engine bundled locally) plus keyboard checks of every header panel; known store defects run as strict expected failures on live, so a fix is reported automatically. |
 | **Evidence and reporting** | Per-run HTML, JUnit and JSON reports tagged with target, browser, seed and git revision; trace, screenshot and video kept on failure. |
-| **CI/CD** | Required checks on Ubuntu and Windows, Docker-served mock UI tests, weekly cross-browser and live read-only runs, SHA-pinned actions, pinned dependencies. |
+| **CI/CD** | Required checks on Ubuntu and Windows, Docker-served mock UI tests, weekly cross-browser and live read-only runs, nightly flaky-test detection, a published HTML report, SHA-pinned actions and pinned dependencies. Ruff, mypy and framework tests also run as pre-commit hooks. |
 
 ## How the simulation relates to the real store
 
@@ -127,10 +127,10 @@ flowchart LR
 
 ## Test coverage
 
-**187 cases:** 73 browser scenarios and 114 offline framework checks
-(settings validation, data loading, page navigation contract, live traffic
-policy, accessibility results, money parsing and formatting, server lifecycle,
-mutation harness). A mutation check injects 27 realistic storefront
+**204 cases:** 73 browser scenarios and 131 offline framework checks
+(settings validation, parallel-run rules, data loading, page navigation
+contract, live traffic policy, accessibility results, money parsing and
+formatting, server lifecycle, mutation and flaky-test harnesses). A mutation check injects 27 realistic storefront
 defects into the simulation; the suite currently detects all 27.
 
 | Area | Scenarios | Target |
@@ -183,6 +183,14 @@ python -m playwright install chromium
 On Linux, use `python -m playwright install --with-deps chromium` to include
 system libraries. Verified on Windows and Ubuntu; macOS has not been verified.
 
+To contribute, install the development tools (Ruff, mypy, pre-commit) and the
+git hooks, which run the same checks as CI before each commit:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pre_commit install
+```
+
 ## Running tests
 
 ```bash
@@ -194,6 +202,7 @@ python -m pytest -m contact      # Contact form (never submitted)
 python -m pytest tests/framework # Offline framework checks only
 python -m pytest --headed        # Watch the browser
 python -m pytest --seed 1729     # Reproduce generated data
+python -m pytest -n auto         # Parallel run (simulation only; live runs are serial)
 ```
 
 The default run starts and stops its own local server on
@@ -247,6 +256,9 @@ Each run writes to `reports/<run-id>/`:
 - `results.xml`: JUnit
 - `summary.json`: counts, target, browser, seed, git revision
 
+The report from the latest `main` run is published at
+**[miltonklun.github.io/PG_Original_POM](https://miltonklun.github.io/PG_Original_POM/)**.
+
 Failed tests keep a trace, screenshot and video in `test-results/<run-id>/`,
 and runtime logs go to `logs/`:
 
@@ -263,11 +275,13 @@ environment problems apart.
 
 | Workflow | Trigger | What it runs | Blocks merge |
 |---|---|---|---|
-| [Mock CI](.github/workflows/ci.yml) | PR / push to `main` | Black, Flake8, mypy and framework checks on Ubuntu + Windows; all UI tests on Chromium against the Docker-served simulation | Yes |
+| [Mock CI](.github/workflows/ci.yml) | PR / push to `main` | Ruff (format and lint), mypy and framework checks on Ubuntu + Windows; all UI tests on Chromium against the Docker-served simulation | Yes |
 | [Browser compatibility](.github/workflows/compatibility.yml) | Weekly / manual | Full UI suite on Firefox and WebKit; Pixel 7 smoke | No |
 | [Live read-only smoke](.github/workflows/live-smoke.yml) | Weekly / manual | All 43 read-only checks on pgoriginal.com, with trackers blocked | No |
 | [Mutation score](.github/workflows/mutation.yml) | Weekly / manual / PRs touching tests or the simulation | Injects each catalogued defect and fails if fewer than 90% are detected | No |
 | [Security](.github/workflows/security.yml) | PR / push to `main` / weekly / manual | Known-vulnerability audit of the pinned dependencies (pip-audit) and workflow security analysis (zizmor) | No |
+| [Flaky test check](.github/workflows/flaky.yml) | Nightly / manual | Five parallel runs of the simulation suite; fails if any test's outcome changes between runs | No |
+| [Test report](.github/workflows/pages.yml) | Push to `main` / manual | Runs the simulation suite and publishes its HTML report to [GitHub Pages](https://miltonklun.github.io/PG_Original_POM/) | No |
 
 Every job uploads its reports (and, for mock failures, traces, screenshots,
 videos and server logs) as artifacts for 14 days. The job summary refuses to

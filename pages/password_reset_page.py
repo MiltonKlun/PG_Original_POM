@@ -1,4 +1,5 @@
 from playwright.sync_api import Page
+
 from config import ui_text
 from pages.base_page import BasePage
 
