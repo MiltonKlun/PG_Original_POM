@@ -149,9 +149,9 @@ The simulation is the accessible reference implementation: it passes every
 check, and mutants remove its focus handling, Escape support, button names
 and contrast to prove the checks fail. On the live store, axe found no
 violations on the five pages in their default state; the keyboard checks and
-the open-panel scans found five issues (DEF-03 to DEF-07 in the
-[defect report](defect-reports.md)). Automated scanning is a floor, not a
-verdict.
+the open-panel scans found five issues (DEF-03 to DEF-07, tracked by
+`live_defect` markers and reported privately to the client). Automated
+scanning is a floor, not a verdict.
 
 ## Page object design
 

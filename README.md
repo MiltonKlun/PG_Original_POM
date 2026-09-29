@@ -277,7 +277,6 @@ render without real JUnit output, so a crashed run can't look green.
 
 - [Test strategy](docs/test-strategy.md): scope, environments, risk-based scenario map, known gaps
 - [Observed site contract](docs/site-contract.md): what the page objects rely on on the real store
-- [Defect reports](docs/defect-reports.md): eight defects found in the live store, with reproduction steps, severity and the checks that track them
 - [Case study](docs/case-study.md): design decisions, a real failure investigation, and how the suite was checked for sensitivity
 - [Troubleshooting](docs/troubleshooting.md): rerunning, traces and failure classification
 - [Simulation contract](mock_site/CONTRACT.md): routes and simulated behavior of the local storefront

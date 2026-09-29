@@ -183,7 +183,7 @@ weekly report shows exactly which are still open.
 | Live read-only cases | 43 (`live_safe`), all in the weekly live run, 9 of them expected failures for known store defects; about 240 tracking requests blocked per run |
 | Browsers | Chromium, Firefox, WebKit on the mock; Pixel 7 emulation smoke |
 | CI | Required static and framework checks on Ubuntu and Windows, plus mock UI on Ubuntu; weekly live and compatibility runs |
-| Defects found in the live store | 8, written up in the [defect report](defect-reports.md); one earlier finding withdrawn after inspection |
+| Defects found in the live store | 8, tracked by `live_defect` checks and reported privately to the client; one earlier finding withdrawn after inspection |
 
 ## Trade-offs and limits
 
