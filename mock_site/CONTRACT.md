@@ -31,6 +31,13 @@ No external assets, analytics, authentication, email or payment services exist.
 Header, menu, search, cart-close and cookie controls work before the catalog
 request completes; only product content waits for data.
 
+The simulation is the accessible reference: opening the search panel,
+menu or cart drawer moves focus into it; Escape or its close control closes
+it and returns focus to the trigger; close controls are named buttons; text
+meets WCAG AA contrast. The live store lacks these (DEF-04 to DEF-07), so
+the shared checks are expected failures there. Class hooks used by the
+page objects are identical on both targets.
+
 Cart additions persist in localStorage per browser context. Identity is product
 ID + selected size/color; repeated identical additions increase quantity. A
 line's unit price is the selected variant's price.

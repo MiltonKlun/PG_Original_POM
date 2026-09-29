@@ -64,6 +64,7 @@
 | **Environment safety** | Target and URL are validated before a browser starts. `live_safe` / `mock_only` markers are enforced at collection, so no cart or form action can reach production. Mock runs fail on any external request. Live runs block ad pixels, analytics and the store's visit counter, and identify themselves in the user agent. |
 | **Data-driven testing** | Named datasets in JSON drive parametrized auth, contact, search and filter cases; seeded Faker (`es_AR`) makes generated data reproducible per test. |
 | **Correct money handling** | ARS prices (`$29.000,00`) parsed into integer minor units with a strict parser that rejects instalment and ambiguous text. |
+| **Accessibility** | axe-core WCAG 2.1 A/AA scans (engine bundled locally) plus keyboard checks of every header panel; known store defects run as strict expected failures on live, so a fix is reported automatically. |
 | **Evidence and reporting** | Per-run HTML, JUnit and JSON reports tagged with target, browser, seed and git revision; trace, screenshot and video kept on failure. |
 | **CI/CD** | Required checks on Ubuntu and Windows, Docker-served mock UI tests, weekly cross-browser and live read-only runs, SHA-pinned actions, pinned dependencies. |
 
@@ -126,10 +127,11 @@ flowchart LR
 
 ## Test coverage
 
-**166 cases:** 55 browser scenarios and 111 offline framework checks
+**187 cases:** 73 browser scenarios and 114 offline framework checks
 (settings validation, data loading, page navigation contract, live traffic
-policy, money parsing and formatting, server lifecycle, mutation harness). A mutation check injects 23 realistic storefront
-defects into the simulation; the suite currently detects all 23.
+policy, accessibility results, money parsing and formatting, server lifecycle,
+mutation harness). A mutation check injects 27 realistic storefront
+defects into the simulation; the suite currently detects all 27.
 
 | Area | Scenarios | Target |
 |---|---|---|
@@ -143,6 +145,7 @@ defects into the simulation; the suite currently detects all 23.
 | Locator contract | Every page-object locator resolves on the target without changing state (7 pages/components) | Mock + live |
 | Catalog integrity | Card prices match their variant data; listing, product page and data attribute agree; variant prices follow selection; size filter; infinite-scroll pagination; structured data (a known store defect on live) | Mock + live |
 | Page health | No JavaScript errors or failed first-party responses on four pages; home-page links resolve (robots.txt respected) | Mock + live |
+| Accessibility | WCAG 2.1 A/AA scans of five pages and three open panels; keyboard focus, Escape and named close controls for search, menu and cart | Mock + live (known defects expected to fail) |
 
 The full risk-based scenario map, eligibility rules and known gaps are in the
 [test strategy](docs/test-strategy.md).
@@ -262,7 +265,7 @@ environment problems apart.
 |---|---|---|---|
 | [Mock CI](.github/workflows/ci.yml) | PR / push to `main` | Black, Flake8, mypy and framework checks on Ubuntu + Windows; all UI tests on Chromium against the Docker-served simulation | Yes |
 | [Browser compatibility](.github/workflows/compatibility.yml) | Weekly / manual | Full UI suite on Firefox and WebKit; Pixel 7 smoke | No |
-| [Live read-only smoke](.github/workflows/live-smoke.yml) | Weekly / manual | All 25 read-only checks on pgoriginal.com, with trackers blocked | No |
+| [Live read-only smoke](.github/workflows/live-smoke.yml) | Weekly / manual | All 43 read-only checks on pgoriginal.com, with trackers blocked | No |
 | [Mutation score](.github/workflows/mutation.yml) | Weekly / manual / PRs touching tests or the simulation | Injects each catalogued defect and fails if fewer than 90% are detected | No |
 | [Security](.github/workflows/security.yml) | PR / push to `main` / weekly / manual | Known-vulnerability audit of the pinned dependencies (pip-audit) and workflow security analysis (zizmor) | No |
 
@@ -273,7 +276,8 @@ render without real JUnit output, so a crashed run can't look green.
 ## Documentation
 
 - [Test strategy](docs/test-strategy.md): scope, environments, risk-based scenario map, known gaps
-- [Observed site contract](docs/site-contract.md): what the page objects rely on, and accessibility findings on the real store
+- [Observed site contract](docs/site-contract.md): what the page objects rely on on the real store
+- [Defect reports](docs/defect-reports.md): eight defects found in the live store, with reproduction steps, severity and the checks that track them
 - [Case study](docs/case-study.md): design decisions, a real failure investigation, and how the suite was checked for sensitivity
 - [Troubleshooting](docs/troubleshooting.md): rerunning, traces and failure classification
 - [Simulation contract](mock_site/CONTRACT.md): routes and simulated behavior of the local storefront

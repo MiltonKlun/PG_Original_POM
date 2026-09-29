@@ -17,6 +17,14 @@ class LoginPage(BasePage):
         self.forgot_password_link = self.form.get_by_role(
             "link", name=ui_text.FORGOT_PASSWORD
         )
+        # Label-based view of the same fields: resolves only when each label
+        # is programmatically associated with its input (DEF-03 on live).
+        self.email_by_label = self.form.get_by_label(
+            ui_text.LOGIN_EMAIL_LABEL, exact=True
+        )
+        self.password_by_label = self.form.get_by_label(
+            ui_text.LOGIN_PASSWORD_LABEL, exact=True
+        )
         self.invalid_inputs = self.form.locator("input:invalid")
         self.error_message = self.form.locator(".js-login-general-error")
 

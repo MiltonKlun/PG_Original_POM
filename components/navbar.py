@@ -23,6 +23,8 @@ class Navbar(BaseComponent):
         self.menu_all_products = self.menu.get_by_role(
             "link", name=ui_text.ALL_PRODUCTS, exact=True
         )
+        # The SHOP sub-panel has its own close control; only one is visible.
+        self.menu_close_button = self.menu.locator(".js-toggle-menu-close:visible")
 
     def open_search(self) -> None:
         self.search_link.click()

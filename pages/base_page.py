@@ -2,9 +2,10 @@ import logging
 import re
 from functools import cached_property
 from string import Formatter
-from typing import Self
+from typing import Literal, Self
 from urllib.parse import urlsplit
 from playwright.sync_api import Page
+from components.base_component import Disclosure
 from components.cart_drawer import CartDrawer
 from components.cookie_banner import CookieBanner
 from components.navbar import Navbar
@@ -42,6 +43,16 @@ class BasePage:
     @cached_property
     def cookies(self) -> CookieBanner:
         return CookieBanner(self.page.locator(".js-acknowledge-cookies"))
+
+    def disclosure(self, name: Literal["search", "menu", "cart"]) -> Disclosure:
+        """Keyboard view of a header panel: its trigger, panel and close."""
+        if name == "search":
+            search = self.search
+            return Disclosure(self.navbar.search_link, search.root, search.close_button)
+        if name == "menu":
+            nav = self.navbar
+            return Disclosure(nav.menu_link, nav.menu, nav.menu_close_button)
+        return Disclosure(self.cart.trigger, self.cart.root, self.cart.close_button)
 
     def url_for(self, **params: str) -> str:
         fields = {name for _, name, _, _ in Formatter().parse(self.path) if name}

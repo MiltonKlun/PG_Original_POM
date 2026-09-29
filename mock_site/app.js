@@ -70,15 +70,35 @@ function filtersHTML(products, color, size) {
 }
 // Page-shell controls exist in the static HTML, so wire them before any data
 // request: a slow catalog response must not make visible controls inert.
+// Accessible reference behavior (the live store lacks it, see the defect
+// report): opening a panel moves focus into it; Escape or its close control
+// hides it and returns focus to the control that opened it.
+const openerOf = {};
+function openPanel(panel, trigger) {
+  openerOf[panel.id] = trigger;
+  panel.hidden = false;
+  const input = panel.id === 'nav-search' && panel.querySelector('input');
+  if (input) { input.focus(); return; }
+  panel.tabIndex = -1;
+  panel.focus();
+}
+function closePanel(panel) {
+  panel.hidden = true;
+  if (openerOf[panel.id]) openerOf[panel.id].focus();
+}
 function wireShell() {
   document.querySelectorAll('header [data-toggle]').forEach(link => link.addEventListener('click', event => {
-    event.preventDefault(); const panel = document.querySelector(link.dataset.toggle); panel.hidden = false;
-    if (panel.id === 'nav-search') panel.querySelector('input').focus();
+    event.preventDefault(); openPanel(document.querySelector(link.dataset.toggle), link);
   }));
-  document.querySelector('#nav-search .js-modal-close').addEventListener('click', e => { e.preventDefault(); document.querySelector('#nav-search').hidden = true; });
+  document.querySelector('#nav-search .js-modal-close').addEventListener('click', e => { e.preventDefault(); closePanel(document.querySelector('#nav-search')); });
   document.querySelectorAll('#nav-hamburger .js-toggle-menu-panel').forEach(toggle => toggle.addEventListener('click', e => { e.preventDefault(); toggle.nextElementSibling.hidden = false; }));
-  document.querySelector('#nav-hamburger .js-toggle-menu-close').addEventListener('click', () => { document.querySelector('#nav-hamburger').hidden = true; });
-  document.querySelector('#modal-cart .modal-close').addEventListener('click', () => { document.querySelector('#modal-cart').hidden = true; });
+  document.querySelector('#nav-hamburger .js-toggle-menu-close').addEventListener('click', () => closePanel(document.querySelector('#nav-hamburger')));
+  document.querySelector('#modal-cart .modal-close').addEventListener('click', () => closePanel(document.querySelector('#modal-cart')));
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+    const open = ['#modal-cart', '#nav-hamburger', '#nav-search'].map(s => document.querySelector(s)).find(p => !p.hidden);
+    if (open) closePanel(open);
+  });
   document.querySelector('.cookies').hidden = localStorage.getItem('pg-qa-consent') === 'yes';
   document.querySelector('.js-acknowledge-cookies').addEventListener('click', () => {localStorage.setItem('pg-qa-consent','yes');document.querySelector('.cookies').hidden = true;});
 }
