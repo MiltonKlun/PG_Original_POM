@@ -18,7 +18,7 @@ submissions, contact messages or reset emails were sent while collecting them.
 | Shop | `/productos/`, heading `Productos`, 12 cards rendered initially | `.item-product` scopes each card; `a.item-link` is the text link (image and text links share a name) | — |
 | Pagination | Infinite scroll: scrolling to the last card appends the next 12 cards and updates the URL to `?mpage=N`. The `.js-load-more` "Mostrar más productos" control starts as `display:none` and appeared only after several automatic loads (60 cards, `?mpage=5`) | `load_more()` scrolls to the end of the list; the button is not required | 2026-09-28: 12 → 24 on one scroll, names unique |
 | Listing prices | A card shows its **first variant's** price; it shows "Sin stock" exactly when no variant is available | Read from each card's `data-variants` | Verified on 30 cards over two pages, 2026-09-28 |
-| Structured data | Product pages embed JSON-LD `Organization`, `WebPage` and `Product` blocks for **related** products; offers are priced in whole units (`"price": "27000"`) | Match the `Product` whose `mainEntityOfPage.@id` is the page URL | No block describes the viewed product: DEF-01 below |
+| Structured data | Product pages embed JSON-LD `Organization`, `WebPage` and `Product` blocks for **related** products; offers are priced in whole units (`"price": "27000"`) | Match the `Product` whose `mainEntityOfPage.@id` is the page URL | No block describes the viewed product (tracked as DEF-01) |
 | Filters | Color and Talle labels wrap hidden checkboxes in duplicated responsive sections; `data-filter-name` / `data-filter-value` (Talle: S, M, L, Xl, Xxl); label text includes result counts, e.g. `S (19)` | Click the **visible** label, matched by `data-filter-value` (text matching would confuse `S` with `XS`, and counts change) | Negro → `/productos/?Color=Negro`, S → `/productos/?Talle=S`; all results offered the value; `Borrar filtros` (`.js-remove-all-filters-private`) restored the list |
 | Product | `/productos/<slug>/`; `#product_form` owns variants, quantity and add; `#price_display` is the current price with raw minor units in `data-product-price`; `#compare_price_display` the original, set to `display:none` when the variant has no discount | IDs separate the PDP from hidden quick-shop forms and instalment prices | Prices are never fixed in live tests; the contract check asserts displayed price == `data-product-price` |
 | Add control | `#product_form` contains the submit **and** a decorative `div.js-addtocart` placeholder | `input[type="submit"].js-addtocart`; the broad class matched both | Found by a failing live smoke run, see the [case study](case-study.md) |
@@ -42,11 +42,11 @@ provider, analytics, newsletter, payments or external assets. See
 
 ## Store defects observed
 
-Defects found in the public store are written up with reproduction steps,
-expected and actual behavior, severity and the check that tracks each one in
-the [defect report](defect-reports.md): DEF-01 (no structured data for the
-viewed product), DEF-02 (failing restock-alert app request), DEF-03 to DEF-07
-(accessibility and keyboard operation) and DEF-08 (duplicate `id`).
+Defects found in the public store are tracked in the suite with
+`live_defect(reason)` markers: each marker states the defect, and the check is
+a strict expected failure on live while it must pass on the simulation. A
+detailed report with reproduction steps, severity and recommendations was
+shared privately with the client.
 
 A 2026-09-27 note about home-page images without `alt` was withdrawn after
 inspection: they're invisible placeholders, not content images.

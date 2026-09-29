@@ -40,7 +40,7 @@ supported and recorded; use unique paths when overriding the defaults.
 | Configuration/collection error | Fix invalid target, URL, marker or malformed dataset before browser debugging. |
 | Fixture/setup error | A precondition failed; pytest/JUnit call this an error, not a passed or skipped case. Inspect its assertion and trace. |
 | Assertion failure | Compare expected business state with DOM, action sequence and network evidence. Do not relax the assertion to get green. |
-| `xfailed` with a `DEF-xx` reason (live) | A check marked `live_defect` failed as expected because of a known store defect listed in the site contract. If it instead reports a strict `XPASS` failure, the store fixed the defect: remove the marker. |
+| `xfailed` with a `DEF-xx` reason (live) | A check marked `live_defect` failed as expected because of the known store defect its marker describes. If it instead reports a strict `XPASS` failure, the store fixed the defect: remove the marker. |
 | Strict locator error | Check responsive duplicates or changed markup; correct scope in the owning POM. Do not add arbitrary `.first`. |
 | Timeout | Inspect the trace first. It may be a locator, data, product, network or environment problem. It alone does not establish bot detection. |
 | `net::ERR_NO_BUFFER_SPACE` on a navigation (Windows) | The OS ran out of socket buffers, typically after many back-to-back runs leave thousands of sockets in `TIME_WAIT` (`(Get-NetTCPConnection -State TimeWait).Count`). Not a product or locator defect. The Python server uses HTTP/1.1 keep-alive, which cut connections per UI run from 290 to 72; wait for sockets to expire and rerun. |
