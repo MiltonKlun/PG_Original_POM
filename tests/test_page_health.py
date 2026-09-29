@@ -2,34 +2,15 @@
 
 import pytest
 from config.live_policy import crawl_allowed
-from pages.base_page import BasePage
-from pages.contact_page import ContactPage
-from pages.home_page import HomePage
-from pages.shop_page import ShopPage
 
 pytestmark = pytest.mark.live_safe
 
 MAX_LINKS_CHECKED = 25
 
 
-@pytest.fixture(params=["home", "shop", "product", "contact"])
-def opened_page(
-    request: pytest.FixtureRequest,
-    home_page: HomePage,
-    shop_page: ShopPage,
-    contact_page: ContactPage,
-) -> BasePage:
-    if request.param == "product":
-        shop_page.open()
-        return shop_page.open_product(shop_page.first_product_name())
-    pages: dict[str, BasePage] = {
-        "home": home_page,
-        "shop": shop_page,
-        "contact": contact_page,
-    }
-    return pages[request.param].open()
-
-
+@pytest.mark.parametrize(
+    "opened_page", ["home", "shop", "product", "contact"], indirect=True
+)
 def test_page_loads_without_errors(opened_page, browser_diagnostics):
     # Third-party failures (e.g. a store app's config) are out of scope here.
     opened_page.wait_for_load()

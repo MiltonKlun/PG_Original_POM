@@ -42,32 +42,14 @@ provider, analytics, newsletter, payments or external assets. See
 
 ## Store defects observed
 
-Observed while re-verifying the contract. These are defects in the public
-site, not in the automation.
+Defects found in the public store are written up with reproduction steps,
+expected and actual behavior, severity and the check that tracks each one in
+the [defect report](defect-reports.md): DEF-01 (no structured data for the
+viewed product), DEF-02 (failing restock-alert app request), DEF-03 to DEF-07
+(accessibility and keyboard operation) and DEF-08 (duplicate `id`).
 
-**DEF-01 (2026-09-28): product pages lack their own structured data.** On
-every product page checked, JSON-LD describes only related products, so
-search engines get no price or availability for the product being viewed.
-The shared check `test_product_page_publishes_its_price_as_structured_data`
-is a strict expected failure on live and passes on the simulation.
-
-**DEF-02 (2026-09-28): a store app's configuration request fails.** Every
-page load gets HTTP 403 for the restock-alert app's settings file
-(`empreender-sa-east-1.s3…/Cheguei/public/settings/nuvem_shop-693159.json`),
-so the "notify me when back in stock" feature likely doesn't load. It's a
-third-party request, so page-health checks don't fail on it.
-
-### Accessibility and HTML (2026-09-27)
-
-1. Login labels point to `id`s that don't exist, so screen readers don't
-   announce field names (WCAG 1.3.1 / 4.1.2).
-2. Icon-only close controls in the cart drawer and menu have no accessible
-   name (WCAG 4.1.2).
-3. The hamburger menu doesn't close on Escape; while open, it intercepts
-   clicks on the header.
-4. Three images on the home page have no `alt` attribute (WCAG 1.1.1).
-5. `/contacto/` has two elements with `id="email"` (contact form and
-   newsletter).
+A 2026-09-27 note about home-page images without `alt` was withdrawn after
+inspection: they're invisible placeholders, not content images.
 
 ## Third-party traffic and the live traffic policy
 

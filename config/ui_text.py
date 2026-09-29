@@ -23,6 +23,8 @@ REMOVE_LINE = "Quitar"
 
 # Login and password reset
 LOGIN_SUBMIT = re.compile("Iniciar", re.I)
+LOGIN_EMAIL_LABEL = "Email"
+LOGIN_PASSWORD_LABEL = "Contraseña"
 FORGOT_PASSWORD = re.compile("Olvidaste")
 RESET_HEADING = re.compile("CAMBIAR CONTRASE", re.I)
 INVALID_CREDENTIALS = "Credenciales incorrectas"  # simulated

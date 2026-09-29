@@ -14,8 +14,9 @@ class CartDrawer(BaseComponent):
         self.items = self.root.locator(".js-cart-item")
         self.empty_message = self.root.locator(".alert-info")
         self.subtotal = self.root.locator(".js-cart-subtotal")
-        # Live close control is an icon-only anchor with no accessible name.
-        self.close_button = self.root.locator("a.js-modal-close.modal-close")
+        # Class hook only: live renders an unnamed icon <a>, the simulation a
+        # named <button> (see DEF-04 in the defect report).
+        self.close_button = self.root.locator(".js-modal-close.modal-close")
 
     def open(self) -> None:
         self.trigger.click()

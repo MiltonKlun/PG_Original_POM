@@ -95,10 +95,16 @@ P0 = revenue or order correctness, P1 = discovery and forms.
 | LOAD-MORE | P1 | Scrolling appends new products, keeps the first page, no repeats | `test_catalog_integrity.py::test_load_more_appends_new_products` | Mock + live |
 | PAGE-HEALTH | P1 | Home, listing, product and contact load with no uncaught JavaScript errors or failed first-party responses | `test_page_health.py::test_page_loads_without_errors` (4 pages) | Mock + live |
 | LINKS | P1 | Up to 25 crawlable home-page links (robots.txt respected) return non-error status | `test_page_health.py::test_home_links_resolve` | Mock + live |
+| A11Y-PAGES | P1 | Home, listing, product, login and contact have no axe-core WCAG 2.1 A/AA violations | `test_accessibility.py::test_page_meets_wcag_aa` (5 pages) | Mock + live |
+| A11Y-PANELS | P1 | Search, menu and cart drawer have no WCAG A/AA violations while open | `test_accessibility.py::test_open_panel_meets_wcag_aa` (3) | Mock; live cart: DEF-07 |
+| LOGIN-LABELS | P2 | Email and password labels are associated with their inputs | `test_accessibility.py::test_login_fields_have_associated_labels` | Mock; live: DEF-03 |
+| KEY-FOCUS | P1 | Opening a panel by keyboard moves focus into it | `test_keyboard.py::test_opening_a_panel_moves_focus_into_it` (3) | Mock + live search; live menu/cart: DEF-06 |
+| KEY-ESCAPE | P1 | Escape closes the panel and returns focus to its trigger | `test_keyboard.py::test_escape_closes_panel_and_returns_focus` (3) | Mock; live: DEF-05 |
+| KEY-CLOSE | P1 | Each panel's close control has an accessible name and takes keyboard focus | `test_keyboard.py::test_close_control_is_named_and_focusable` (3) | Mock; live: DEF-04 |
 
-Totals: 166 collected cases, of which 55 are UI and 111 are offline framework
-checks. 25 UI cases are `live_safe`, and the weekly live run executes all of
-them.
+Totals: 187 collected cases, of which 73 are UI and 114 are offline framework
+checks. 43 UI cases are `live_safe`, and the weekly live run executes all of
+them; 9 of those are strict expected failures for known store defects.
 
 ## Test data
 
@@ -127,6 +133,25 @@ the footprint small and honest:
   isn't a crawler, but the link check skips every disallowed path and samples
   at most 25 links; scenario tests visit login and search only as a user would.
 - Nothing is ever submitted: no cart, login, contact or password-reset action.
+
+## Accessibility
+
+Two complementary layers, both read-only on live:
+
+- **Automated scans:** axe-core 4.12.1 (bundled in the pinned
+  `axe-playwright-python` wheel, never loaded from a CDN) runs WCAG 2.1 A and
+  AA rules on five pages and on each header panel while it's open.
+- **Keyboard checks:** each header panel must open from the keyboard, move
+  focus into itself, close on Escape, return focus to its trigger, and offer
+  a named, focusable close control.
+
+The simulation is the accessible reference implementation: it passes every
+check, and mutants remove its focus handling, Escape support, button names
+and contrast to prove the checks fail. On the live store, axe found no
+violations on the five pages in their default state; the keyboard checks and
+the open-panel scans found five issues (DEF-03 to DEF-07 in the
+[defect report](defect-reports.md)). Automated scanning is a floor, not a
+verdict.
 
 ## Page object design
 
@@ -208,4 +233,7 @@ The weekly and pull-request workflow fails below 90%.
   behavior are covered by the read-only checks, not by the mutation score.
 - Live coverage is read-only by design: cart, checkout and authentication
   behavior is verified only in the simulation.
-- No automated accessibility, visual or performance checks yet.
+- Accessibility checks cover WCAG A/AA rules axe can evaluate and keyboard
+  operation of the header panels; screen-reader output and zoom/reflow are
+  not tested.
+- No visual or performance checks yet.

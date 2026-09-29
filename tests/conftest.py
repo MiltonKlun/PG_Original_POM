@@ -22,6 +22,7 @@ from playwright.sync_api import (
 from config import live_policy
 from config.settings import Settings
 from config.test_data import ContactInput, SuiteData, contact_data, load_data
+from pages.base_page import BasePage
 from pages.contact_page import ContactPage
 from pages.home_page import HomePage
 from pages.login_page import LoginPage
@@ -186,6 +187,27 @@ def contact_page(page: Page) -> ContactPage:
 @pytest.fixture
 def login_page(page: Page) -> LoginPage:
     return LoginPage(page)
+
+
+@pytest.fixture
+def opened_page(
+    request: pytest.FixtureRequest,
+    home_page: HomePage,
+    shop_page: ShopPage,
+    login_page: LoginPage,
+    contact_page: ContactPage,
+) -> BasePage:
+    """Open the page named by indirect parametrization."""
+    if request.param == "product":
+        shop_page.open()
+        return shop_page.open_product(shop_page.first_product_name())
+    pages: dict[str, BasePage] = {
+        "home": home_page,
+        "shop": shop_page,
+        "login": login_page,
+        "contact": contact_page,
+    }
+    return pages[request.param].open()
 
 
 @pytest.fixture

@@ -336,6 +336,63 @@
       "killed_by": [
         "test_listing_cards_match_their_variant_data"
       ]
+    },
+    {
+      "id": "M24",
+      "description": "Escape no longer closes an open panel",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "    if (open) closePanel(open);",
+          "replace": "    if (open) return;"
+        }
+      ],
+      "killed_by": [
+        "test_escape_closes_panel_and_returns_focus"
+      ]
+    },
+    {
+      "id": "M25",
+      "description": "Opening the menu or cart leaves focus on the trigger",
+      "file": "mock_site/app.js",
+      "edits": [
+        {
+          "find": "  panel.tabIndex = -1;\n  panel.focus();",
+          "replace": "  panel.tabIndex = -1;"
+        }
+      ],
+      "killed_by": [
+        "test_opening_a_panel_moves_focus_into_it",
+        "test_escape_closes_panel_and_returns_focus"
+      ]
+    },
+    {
+      "id": "M26",
+      "description": "Cart close button loses its accessible name",
+      "file": "mock_site/index.html",
+      "edits": [
+        {
+          "find": "aria-label=\"Cerrar carrito\"",
+          "replace": "aria-label=\"\""
+        }
+      ],
+      "killed_by": [
+        "test_close_control_is_named_and_focusable"
+      ]
+    },
+    {
+      "id": "M27",
+      "description": "Crossed-out price text drops below WCAG AA contrast",
+      "file": "mock_site/style.css",
+      "edits": [
+        {
+          "find": "text-decoration:line-through;color:#595959",
+          "replace": "text-decoration:line-through;color:#777"
+        }
+      ],
+      "killed_by": [
+        "test_page_meets_wcag_aa"
+      ]
     }
   ]
 }

@@ -159,17 +159,31 @@ strict expected failure on live (reported with its defect ID, and it will
 flag the day the store fixes it) and passes on the simulation, which
 publishes correct structured data.
 
+## Accessibility: what the scanner missed
+
+An axe-core scan of the five main live pages reported no WCAG A/AA
+violations. Keyboard checks told a different story: opening the cart from
+the keyboard left focus on the header icon behind the overlay, and reaching
+the drawer took 143 Tab presses; the close controls had no name and, for the
+menu and cart, couldn't be focused at all; Escape closed nothing. Scanning
+with the cart open found one more issue. Along the way I withdrew one of my
+own earlier findings: "images without alt" were invisible placeholders.
+
+The simulation now implements the accessible behavior, with mutants that
+remove it, and the live defects are strict expected failures, so the
+weekly report shows exactly which are still open.
+
 ## Results
 
 | Measure | Value |
 |---|---|
-| Collected cases | 166: 55 UI, 111 offline framework |
-| Mutation score | 23 of 23 injected defects detected (first measured at 6 of 13) |
+| Collected cases | 187: 73 UI, 114 offline framework |
+| Mutation score | 27 of 27 injected defects detected (first measured at 6 of 13) |
 | Mock run (Windows, Chromium) | ~15 s |
-| Live read-only cases | 25 (`live_safe`), all in the weekly live run; about 240 tracking requests blocked per run |
+| Live read-only cases | 43 (`live_safe`), all in the weekly live run, 9 of them expected failures for known store defects; about 240 tracking requests blocked per run |
 | Browsers | Chromium, Firefox, WebKit on the mock; Pixel 7 emulation smoke |
 | CI | Required static and framework checks on Ubuntu and Windows, plus mock UI on Ubuntu; weekly live and compatibility runs |
-| Defects found in the live store | 7: missing product structured data, a failing store-app request, and 5 accessibility/HTML issues, documented in the [site contract](site-contract.md) |
+| Defects found in the live store | 8, written up in the [defect report](defect-reports.md); one earlier finding withdrawn after inspection |
 
 ## Trade-offs and limits
 
