@@ -19,6 +19,7 @@ def test_page_loads_without_errors(opened_page, browser_diagnostics):
     assert browser_diagnostics.page_errors == []
 
 
+@pytest.mark.needs_network
 def test_home_links_resolve(home_page):
     home_page.open()
     paths = [p for p in home_page.linked_paths() if p and crawl_allowed(p)]

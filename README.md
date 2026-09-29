@@ -65,18 +65,19 @@
 | **Data-driven testing** | Named datasets in JSON drive parametrized auth, contact, search and filter cases; seeded Faker (`es_AR`) makes generated data reproducible per test. |
 | **Correct money handling** | ARS prices (`$29.000,00`) parsed into integer minor units with a strict parser that rejects instalment and ambiguous text. |
 | **Accessibility** | axe-core WCAG 2.1 A/AA scans (engine bundled locally) plus keyboard checks of every header panel; known store defects run as strict expected failures on live, so a fix is reported automatically. |
+| **Snapshot and visual testing** | The store's read-only traffic is recorded, sanitized and replayed offline as a third target (`TARGET=snapshot`), so live-safe checks run deterministically on real markup; a weekly job re-records it and opens an issue when page-object selectors stop matching. Screenshots of the simulation are compared with reviewed per-platform baselines. |
 | **Evidence and reporting** | Per-run HTML, JUnit and JSON reports tagged with target, browser, seed and git revision; trace, screenshot and video kept on failure. |
 | **CI/CD** | Required checks on Ubuntu and Windows, Docker-served mock UI tests, weekly cross-browser and live read-only runs, nightly flaky-test detection, a published HTML report, SHA-pinned actions and pinned dependencies. Ruff, mypy and framework tests also run as pre-commit hooks. |
 
 ## How the simulation relates to the real store
 
-| | Local simulation (default) | Live read-only smoke (optional) |
-|---|---|---|
-| **Runs against** | `mock_site/` on `http://127.0.0.1:8090` | `https://www.pgoriginal.com` |
-| **Data** | Synthetic products (`QA Remera`, `QA Gorra`, `QA Agotado`) and fixed prices | Whatever the store shows that day |
-| **Covers** | Everything, including cart add/quantity/remove, sold-out products, invalid login and form validation | Home, menu, search, product details, catalog and price consistency, filters, pagination, page health and the locator contract (weekly) |
-| **Purpose** | Deterministic, repeatable proof that the tests detect wrong outcomes | Early warning that the real markup has changed |
-| **Never does** | Contact external hosts | Add to cart, log in, submit forms, send email, bypass challenges |
+| | Local simulation (default) | Live read-only smoke (optional) | Snapshot replay |
+|---|---|---|---|
+| **Runs against** | `mock_site/` on `http://127.0.0.1:8090` | `https://www.pgoriginal.com` | A sanitized recording of the live store in `snapshots/` |
+| **Data** | Synthetic products (`QA Remera`, `QA Gorra`, `QA Agotado`) and fixed prices | Whatever the store shows that day | The store as it was when recorded |
+| **Covers** | Everything, including cart add/quantity/remove, sold-out products, invalid login and form validation | Home, menu, search, product details, catalog and price consistency, filters, pagination, page health and the locator contract (weekly) | The same read-only checks, except the link check, which needs the network |
+| **Purpose** | Deterministic, repeatable proof that the tests detect wrong outcomes | Early warning that the real markup has changed | Deterministic runs on real markup, on every pull request |
+| **Never does** | Contact external hosts | Add to cart, log in, submit forms, send email, bypass challenges | Contact any host; everything is served from the recording |
 
 The simulation's markup is based on what I observed on the real site
 (see the [site contract](docs/site-contract.md)). Its behavior is specified
@@ -94,6 +95,7 @@ flowchart LR
     T --> D["data/ + config/<br/>datasets · settings · money"]
     PW -->|TARGET=mock| M["Local simulation<br/>mock_site/"]
     PW -->|TARGET=live, live_safe only| L["pgoriginal.com<br/>read-only"]
+    PW -->|TARGET=snapshot, live_safe only| S["Recorded live traffic<br/>snapshots/pgoriginal.har"]
 ```
 
 ```text
@@ -110,7 +112,8 @@ flowchart LR
 ├── tests/                  # UI scenarios + tests/framework/ offline checks
 ├── data/                   # Named datasets and expected values
 ├── mock_site/              # Local storefront simulation + behavior contract + Dockerfile
-├── scripts/                # Mock server lifecycle and CI summary
+├── snapshots/              # Sanitized recording of the live store, replayed offline
+├── scripts/                # Mock server, snapshot, mutation, flaky-test and CI summary tools
 └── .github/workflows/      # Mock CI, live smoke, browser compatibility
 ```
 
@@ -127,10 +130,11 @@ flowchart LR
 
 ## Test coverage
 
-**204 cases:** 73 browser scenarios and 131 offline framework checks
+**230 cases:** 79 browser scenarios and 151 offline framework checks
 (settings validation, parallel-run rules, data loading, page navigation
 contract, live traffic policy, accessibility results, money parsing and
-formatting, server lifecycle, mutation and flaky-test harnesses). A mutation check injects 27 realistic storefront
+formatting, server lifecycle, snapshot sanitizing and drift, screenshot
+comparison, mutation and flaky-test harnesses). A mutation check injects 27 realistic storefront
 defects into the simulation; the suite currently detects all 27.
 
 | Area | Scenarios | Target |
@@ -146,6 +150,7 @@ defects into the simulation; the suite currently detects all 27.
 | Catalog integrity | Card prices match their variant data; listing, product page and data attribute agree; variant prices follow selection; size filter; infinite-scroll pagination; structured data (a known store defect on live) | Mock + live |
 | Page health | No JavaScript errors or failed first-party responses on four pages; home-page links resolve (robots.txt respected) | Mock + live |
 | Accessibility | WCAG 2.1 A/AA scans of five pages and three open panels; keyboard focus, Escape and named close controls for search, menu and cart | Mock + live (known defects expected to fail) |
+| Visual regression | Five pages and the cart drawer with one item, compared with reviewed baselines (desktop Chromium) | Mock |
 
 The full risk-based scenario map, eligibility rules and known gaps are in the
 [test strategy](docs/test-strategy.md).
@@ -203,6 +208,7 @@ python -m pytest tests/framework # Offline framework checks only
 python -m pytest --headed        # Watch the browser
 python -m pytest --seed 1729     # Reproduce generated data
 python -m pytest -n auto         # Parallel run (simulation only; live runs are serial)
+python -m pytest --update-baselines tests/test_visual.py  # Rewrite visual baselines for review
 ```
 
 The default run starts and stops its own local server on
@@ -225,6 +231,14 @@ TARGET=live python -m pytest tests -m "smoke and live_safe" --browser chromium
 This selects four read-only checks (home/shop access, menu navigation,
 search, product details). On the live target, every test not marked `live_safe` is deselected
 automatically.
+
+**Offline replay of the live store**
+
+```bash
+# Linux / macOS (PowerShell: set $env:TARGET as above)
+TARGET=snapshot python -m pytest tests -n 4
+python -m scripts.snapshot record    # Re-record from the live store (read-only, serial)
+```
 
 **Optional: Docker-served simulation**
 
@@ -276,8 +290,10 @@ environment problems apart.
 | Workflow | Trigger | What it runs | Blocks merge |
 |---|---|---|---|
 | [Mock CI](.github/workflows/ci.yml) | PR / push to `main` | Ruff (format and lint), mypy and framework checks on Ubuntu + Windows; all UI tests on Chromium against the Docker-served simulation | Yes |
+| [Mock CI](.github/workflows/ci.yml), snapshot job | PR / push to `main` | The 42 replayable read-only checks against the recorded live store, offline | No |
 | [Browser compatibility](.github/workflows/compatibility.yml) | Weekly / manual | Full UI suite on Firefox and WebKit; Pixel 7 smoke | No |
 | [Live read-only smoke](.github/workflows/live-smoke.yml) | Weekly / manual | All 43 read-only checks on pgoriginal.com, with trackers blocked | No |
+| [Snapshot refresh](.github/workflows/snapshot-refresh.yml) | Weekly / manual | Re-records the live store (read-only), compares the selectors the page objects use and replays the suite on the new recording; opens an issue on drift | No |
 | [Mutation score](.github/workflows/mutation.yml) | Weekly / manual / PRs touching tests or the simulation | Injects each catalogued defect and fails if fewer than 90% are detected | No |
 | [Security](.github/workflows/security.yml) | PR / push to `main` / weekly / manual | Known-vulnerability audit of the pinned dependencies (pip-audit) and workflow security analysis (zizmor) | No |
 | [Flaky test check](.github/workflows/flaky.yml) | Nightly / manual | Five parallel runs of the simulation suite; fails if any test's outcome changes between runs | No |

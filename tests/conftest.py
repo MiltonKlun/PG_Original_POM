@@ -1,9 +1,11 @@
 """Plugin-owned browser lifecycle and explicitly requested page objects."""
 
 import logging
+import re
 from collections import Counter
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -12,6 +14,7 @@ from playwright.sync_api import (
     Browser,
     BrowserContext,
     Error,
+    Locator,
     Page,
     Request,
     Response,
@@ -22,6 +25,7 @@ from playwright.sync_api import (
 from config import live_policy
 from config.settings import Settings
 from config.test_data import ContactInput, SuiteData, contact_data, load_data
+from config.visual import baseline_path, compare_images
 from pages.base_page import BasePage
 from pages.contact_page import ContactPage
 from pages.home_page import HomePage
@@ -75,15 +79,23 @@ def browser_context_args(
             request.getfixturevalue("browser")
         )
         args["user_agent"] = f"{base} {live_policy.USER_AGENT_SUFFIX}"
+    if settings.replays_store or pytestconfig.getoption("record_snapshot"):
+        # Service worker requests bypass routing, so they could be neither
+        # recorded nor replayed.
+        args["service_workers"] = "block"
     return args
 
 
 @pytest.fixture
-def network_guard(context: BrowserContext, settings: Settings) -> Iterator[None]:
+def network_guard(
+    context: BrowserContext, settings: Settings, pytestconfig: pytest.Config
+) -> Iterator[None]:
     """Mock: abort any request leaving the mock origin, and fail the test.
-    Live: abort analytics and tracking requests (config/live_policy.py)."""
+    Live: abort analytics and tracking requests (config/live_policy.py).
+    Snapshot: serve the recording; abort anything it does not contain."""
     external: list[str] = []
     blocked: Counter[str] = Counter()
+    unrecorded: Counter[str] = Counter()
 
     def forbidden(url: str) -> bool:
         return urlsplit(url).scheme in {"http", "https"} and origin(url) != origin(
@@ -98,7 +110,11 @@ def network_guard(context: BrowserContext, settings: Settings) -> Iterator[None]
     def guard(route: Route) -> None:
         url = route.request.url
         rule = live_policy.blocked_by(url) if settings.target == "live" else None
-        if rule is not None:
+        if settings.replays_store:
+            # Reached only when the recording has no matching entry.
+            unrecorded[urlsplit(url).hostname or "?"] += 1
+            route.abort("internetdisconnected")
+        elif rule is not None:
             blocked[rule.purpose] += 1
             route.abort("blockedbyclient")
         elif settings.target == "mock" and forbidden(url):
@@ -109,10 +125,36 @@ def network_guard(context: BrowserContext, settings: Settings) -> Iterator[None]
     # Request events also report redirects that do not invoke route handlers.
     context.on("request", record)
     context.route("**/*", guard)
+    if settings.replays_store:
+        # Registered last, so it answers first; misses fall back to the guard.
+        context.route_from_har(
+            pytestconfig.getoption("snapshot_har"), not_found="fallback"
+        )
     yield
     if blocked:
         browser_log.info("Blocked tracking requests: %s", dict(blocked))
+    if unrecorded:
+        browser_log.info("Requests missing from the snapshot: %s", dict(unrecorded))
     assert not external, f"Mock attempted external requests: {external}"
+
+
+@pytest.fixture
+def snapshot_recorder(
+    request: pytest.FixtureRequest, context: BrowserContext, pytestconfig: pytest.Config
+) -> None:
+    """Record this test's live traffic; the HAR is written when the context
+    closes. scripts/snapshot.py merges and sanitizes the recordings."""
+    folder = pytestconfig.getoption("record_snapshot")
+    if folder is None:
+        return
+    folder.mkdir(parents=True, exist_ok=True)
+    name = re.sub(r"[^A-Za-z0-9_.-]+", "_", request.node.nodeid)
+    context.route_from_har(
+        folder / f"{name}.har",
+        update=True,
+        update_content="embed",
+        update_mode="minimal",
+    )
 
 
 @pytest.fixture
@@ -157,7 +199,8 @@ def configure_ui(request: pytest.FixtureRequest, settings: Settings) -> None:
     if request.node.get_closest_marker("framework"):
         return
     # Guard first so routing is in place before any page navigates.
-    for name in ("network_guard", "ui_timeouts", "browser_diagnostics"):
+    names = ("network_guard", "snapshot_recorder", "ui_timeouts", "browser_diagnostics")
+    for name in names:
         request.getfixturevalue(name)
     logging.getLogger("test").info(
         "case=%s target=%s seed=%s", request.node.nodeid, settings.target, settings.seed
@@ -216,3 +259,45 @@ def catalog_name(settings: Settings, test_data: SuiteData, shop_page: ShopPage) 
         return test_data.shop.shirt.name
     shop_page.open()
     return shop_page.first_product_name()
+
+
+VisualCheck = Callable[[Page | Locator, str], None]
+
+
+@pytest.fixture
+def visual_check(
+    pytestconfig: pytest.Config, browser_name: str, output_path: str
+) -> VisualCheck:
+    """Compare a screenshot with its reviewed baseline (config/visual.py)."""
+    if browser_name != "chromium" or pytestconfig.getoption("device"):
+        pytest.skip("Visual baselines are reviewed for desktop Chromium only")
+
+    def check(target: Page | Locator, name: str) -> None:
+        if isinstance(target, Page):
+            actual = target.screenshot(
+                full_page=True, animations="disabled", caret="hide"
+            )
+        else:
+            actual = target.screenshot(animations="disabled", caret="hide")
+        baseline = baseline_path(name)
+        if pytestconfig.getoption("update_baselines"):
+            baseline.parent.mkdir(parents=True, exist_ok=True)
+            baseline.write_bytes(actual)
+            return
+        evidence = Path(output_path)
+        evidence.mkdir(parents=True, exist_ok=True)
+        if not baseline.is_file():
+            (evidence / f"{name}-actual.png").write_bytes(actual)
+            pytest.fail(
+                f"No reviewed baseline {baseline.name}: run with --update-baselines,"
+                " review the image and commit it"
+            )
+        result = compare_images(actual, baseline.read_bytes())
+        if not result.passed:
+            (evidence / f"{name}-actual.png").write_bytes(actual)
+            (evidence / f"{name}-expected.png").write_bytes(baseline.read_bytes())
+            if result.diff_png:
+                (evidence / f"{name}-diff.png").write_bytes(result.diff_png)
+            pytest.fail(f"{name} differs from {baseline.name}: {result.describe()}")
+
+    return check

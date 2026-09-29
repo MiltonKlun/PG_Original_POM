@@ -2,11 +2,18 @@
 
 import os
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 
 from config.reporting import RunReport
-from config.settings import Settings, check_parallel, eligible, worker_port
+from config.settings import (
+    SNAPSHOT_HAR,
+    Settings,
+    check_parallel,
+    eligible,
+    worker_port,
+)
 
 SETTINGS = pytest.StashKey[Settings]()
 RUN_REPORT = "pg-run-report"
@@ -19,6 +26,24 @@ def run_report_blocked(config: pytest.Config) -> bool:
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption("--seed", type=int, default=1729, help="Synthetic data seed")
     parser.addoption("--run-id", default=None, help="Unique evidence run ID")
+    parser.addoption(
+        "--snapshot-har",
+        type=Path,
+        default=SNAPSHOT_HAR,
+        help="Recording replayed by TARGET=snapshot",
+    )
+    parser.addoption(
+        "--record-snapshot",
+        type=Path,
+        default=None,
+        metavar="DIR",
+        help="TARGET=live only: record each test's traffic as a HAR in DIR",
+    )
+    parser.addoption(
+        "--update-baselines",
+        action="store_true",
+        help="Write visual baselines for review instead of comparing",
+    )
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -35,6 +60,7 @@ def pytest_configure(config: pytest.Config) -> None:
         )
         if workerinput is None:
             check_parallel(settings.target, config.getoption("numprocesses", None))
+        check_snapshot_options(config, settings)
     except ValueError as exc:
         raise pytest.UsageError(str(exc)) from exc
     config.stash[SETTINGS] = settings
@@ -50,6 +76,14 @@ def pytest_configure(config: pytest.Config) -> None:
         config.pluginmanager.register(
             RunReport(config, config.stash[SETTINGS]), RUN_REPORT
         )
+
+
+def check_snapshot_options(config: pytest.Config, settings: Settings) -> None:
+    if config.getoption("record_snapshot") and settings.target != "live":
+        raise ValueError("--record-snapshot records the live store: use TARGET=live")
+    har = config.getoption("snapshot_har")
+    if settings.replays_store and not har.is_file():
+        raise ValueError(f"No snapshot recording at {har}; see docs/test-strategy.md")
 
 
 def pytest_report_header(config: pytest.Config) -> str:
@@ -74,7 +108,8 @@ def pytest_collection_modifyitems(
             raise pytest.UsageError(f"{item.nodeid}: {exc}") from exc
         (selected if allowed else deselected).append(item)
         defect = item.get_closest_marker("live_defect")
-        if defect and config.stash[SETTINGS].target == "live":
+        # A snapshot replays the live markup, defects included.
+        if defect and config.stash[SETTINGS].target in {"live", "snapshot"}:
             # Strict: once the store fixes the defect, the pass is reported so
             # the marker gets removed. Only assertion failures count as expected.
             item.add_marker(
@@ -93,7 +128,7 @@ def settings(pytestconfig: pytest.Config) -> Settings:
 
 @pytest.fixture(scope="session")
 def base_url(settings: Settings) -> Iterator[str]:
-    if settings.target == "live":
+    if settings.target != "mock":
         yield settings.base_url
     else:
         from scripts.serve_mock import mock_target
