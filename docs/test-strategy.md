@@ -15,6 +15,7 @@ environment**.
 |---|---|---|---|
 | `mock` (default) | Local synthetic storefront in `mock_site/`, served by Python or nginx/Docker. Markup follows the observed live contract; catalog, cart, login rejection and form rules are simulated. | The automation works, assertions detect wrong business outcomes, and runs are deterministic and isolated. | That production behaves the same way. |
 | `live` | `https://www.pgoriginal.com`, read-only. | Selected public pages, search, product details and form controls work today, and the locators still match real markup. | Cart, checkout, authentication, email or payment behavior. |
+| `snapshot` | The live store's traffic, recorded by the read-only suite and replayed offline from `snapshots/pgoriginal.har`. | The read-only checks pass on real markup, deterministically, without touching the store. | That the store still looks like the recording; the weekly refresh answers that. |
 
 Mock results are always reported as mock results. A green mock run is never
 presented as evidence about production.
@@ -36,16 +37,20 @@ load and security testing.
 Every UI test carries exactly one eligibility marker, enforced at collection
 time in `conftest.py`:
 
-| Marker | Meaning | Selected on live |
-|---|---|---|
-| `live_safe` | Observed, non-submitting behavior | Yes |
-| `mock_only` | Mutates state, submits a form, or depends on simulated rules | Never |
-| `framework` | Offline checks of the framework itself (no browser/server) | Yes |
+| Marker | Meaning | Selected on live | Selected on snapshot |
+|---|---|---|---|
+| `live_safe` | Observed, non-submitting behavior | Yes | Yes, unless also `needs_network` |
+| `mock_only` | Mutates state, submits a form, or depends on simulated rules | Never | Never |
+| `framework` | Offline checks of the framework itself (no browser/server) | Yes | Yes |
+
+`needs_network` marks a check that sends HTTP requests outside the browser
+(the home-page link check), which a recording cannot answer.
 
 `contract` additionally marks the read-only locator checks in
 `tests/test_contract.py`, which run on both targets. `live_defect(reason)`
 marks a check that fails on live because of a known store defect: on live
-it becomes a strict expected failure (reported as `xfailed` with its defect
+and on the snapshot, which replays the same markup, it becomes a strict
+expected failure (reported as `xfailed` with its defect
 ID, and failing the run once the store is fixed); on the simulation it must
 pass.
 
@@ -167,6 +172,39 @@ refused in parallel: the store sees one browser at a time.
 test's outcome across runs. Nothing is retried or hidden: a test whose result
 changes is flaky, and one that fails every time is reported as failing.
 
+## Snapshot target
+
+`python -m scripts.snapshot record` runs the read-only live suite serially,
+with trackers blocked, and records each test's traffic as a HAR. The
+recordings are merged into `snapshots/pgoriginal.har`: one response per
+request (a success wins over an error), no cookies, only the headers a
+replay needs, raster images replaced by a 1x1 placeholder, and nothing from
+analytics or bot challenges (reCAPTCHA, Turnstile). `TARGET=snapshot`
+serves that file through Playwright's HAR routing; any request it does not
+contain is aborted, so a snapshot run never reaches the network. A run
+through a proxy that refuses every connection passes in full.
+
+The snapshot runs on every pull request. The weekly refresh job re-records
+the store and compares the selectors the page objects use (every literal
+`locator()` string in `pages/` and `components/`) on five pages of the old
+and new recordings. A selector that stopped matching fails the job and opens
+an issue; the suite is also replayed on the new recording. Refreshing the
+committed snapshot is a reviewed change like any other.
+
+## Visual regression
+
+`tests/test_visual.py` compares full-page screenshots of five simulation
+pages, and the cart drawer with one item, with baselines in `tests/visual/`.
+Fonts render differently per operating system, so each baseline is stored
+per platform (`home-win32.png`, `home-linux.png`) and only for desktop
+Chromium. A pixel counts as changed when a color channel differs by more
+than 16; more than 25 changed pixels, or a size change, fails the test and
+keeps the actual, expected and highlighted diff images. Recoloring one
+struck-through price changes about 340 pixels; repeated runs change none.
+Baselines are written with `--update-baselines`, reviewed as images in the
+pull request, and never updated by CI. The live store is not compared
+visually: its content changes daily.
+
 ## Page object design
 
 - Pages extend a small `BasePage` that declares a relative `path` template
@@ -198,7 +236,9 @@ changes is flaky, and one that fails every time is reported as failing.
 
 | Pipeline | Trigger | Selection | Blocking |
 |---|---|---|---|
-| Mock CI | PR / push to `main` | Static checks + framework tests (Ubuntu, Windows); all UI tests, Chromium against Docker/nginx | Yes (required checks) |
+| Mock CI | PR / push to `main` | Static checks + framework tests (Ubuntu, Windows); all UI tests including visual, Chromium against Docker/nginx | Yes (required checks) |
+| Snapshot UI (Mock CI job) | PR / push to `main` | Replayable `live_safe` cases on the recorded store, Chromium, offline | No |
+| Snapshot refresh | Weekly / manual | Re-record live, selector drift check, replay on the new recording; opens an issue on drift | No |
 | Compatibility | Weekly / manual | Full mock UI on Firefox and WebKit; Chromium Pixel 7 emulation smoke | No |
 | Live read-only | Weekly / manual | All `live_safe` cases, Chromium, serial, no retries, trackers blocked | No; a failure stays visible |
 | Mutation score | Weekly / manual / PRs touching tests or the mock | All mutants against the mock UI suite, run in parallel; fails below 90% | No |
@@ -252,4 +292,13 @@ The weekly and pull-request workflow fails below 90%.
 - Accessibility checks cover WCAG A/AA rules axe can evaluate and keyboard
   operation of the header panels; screen-reader output and zoom/reflow are
   not tested.
-- No visual or performance checks yet.
+- Visual baselines cover the simulation only, on desktop Chromium; there
+  are no performance checks.
+- A snapshot shows the store as recorded. Between refreshes, only the
+  weekly live run shows today's store.
+- Cart and checkout on a real storefront: a separate Tiendanube trial store
+  with a similar theme was evaluated and not adopted. It would need an
+  account and credentials owned by the store, its theme and apps would
+  differ from PG Original's, and a checkout would still need a payment
+  sandbox. Cart behavior stays covered by the simulation, whose detection is
+  measured by mutation testing.

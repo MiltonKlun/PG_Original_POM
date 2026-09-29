@@ -13,9 +13,10 @@ class CookieBanner(BaseComponent):
         try:
             expect(self.root).to_be_visible(timeout=500)
         except AssertionError:
-            # Only absence is optional. A detected but unclickable banner must fail.
-            if self.root.count() == 0 or not self.root.is_visible():
+            # Only absence is optional. The store's script shows the banner
+            # after load, so it may appear just after the wait: dismiss it then.
+            if not self.root.is_visible():
                 return
-            raise
+        # A banner that is shown but can't be dismissed fails here.
         self.root.click()
         expect(self.root).to_be_hidden()

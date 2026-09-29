@@ -2,10 +2,14 @@
 
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Self
 from urllib.parse import urlsplit
 
 MOCK_PORT = 8090
+LIVE_ORIGIN = "https://www.pgoriginal.com"
+# Recorded read-only store traffic, replayed by TARGET=snapshot.
+SNAPSHOT_HAR = Path(__file__).resolve().parents[1] / "snapshots" / "pgoriginal.har"
 
 
 def worker_port(worker: str | None, base: int = MOCK_PORT) -> int:
@@ -34,6 +38,11 @@ class Settings:
     action_timeout: int = 10_000
     assertion_timeout: int = 5_000
 
+    @property
+    def replays_store(self) -> bool:
+        """The store's real markup, served from a recording: no network."""
+        return self.target == "snapshot"
+
     @classmethod
     def resolve(
         cls,
@@ -42,13 +51,9 @@ class Settings:
         seed: int = 1729,
         mock_port: int = MOCK_PORT,
     ) -> Self:
-        if target not in {"mock", "live"}:
-            raise ValueError("TARGET must be 'mock' or 'live'")
-        default = (
-            f"http://127.0.0.1:{mock_port}"
-            if target == "mock"
-            else "https://www.pgoriginal.com"
-        )
+        if target not in {"mock", "live", "snapshot"}:
+            raise ValueError("TARGET must be 'mock', 'live' or 'snapshot'")
+        default = f"http://127.0.0.1:{mock_port}" if target == "mock" else LIVE_ORIGIN
         url = base_url if base_url is not None else default
         parts = urlsplit(url)
         if (
@@ -68,6 +73,7 @@ class Settings:
                 "::1",
             }
         else:
+            # A snapshot replays the store's own origin, so it has the same rule.
             valid = (
                 parts.scheme == "https"
                 and parts.hostname == "www.pgoriginal.com"
@@ -81,4 +87,8 @@ class Settings:
 def eligible(markers: set[str], target: str) -> bool:
     if {"mock_only", "live_safe"} <= markers:
         raise ValueError("A test cannot be both mock_only and live_safe")
-    return target == "mock" or bool(markers & {"framework", "live_safe"})
+    if target == "mock" or "framework" in markers:
+        return True
+    if target == "snapshot" and "needs_network" in markers:
+        return False  # Direct HTTP requests bypass the recording.
+    return "live_safe" in markers

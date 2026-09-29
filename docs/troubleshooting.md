@@ -27,6 +27,33 @@ To look for flakiness locally:
 python scripts/flaky_check.py --runs 5 --workers auto
 ```
 
+## Snapshot runs
+
+`TARGET=snapshot` needs `snapshots/pgoriginal.har`; `--snapshot-har <file>`
+replays another recording (the refresh job uses this for a new one). Requests
+missing from the recording are aborted and counted in the log as "Requests
+missing from the snapshot"; trackers and bot challenges always appear there.
+A test that passes live but fails on the snapshot usually needs a request the
+recording does not contain: re-record with `python -m scripts.snapshot record`.
+
+The store's pages are much heavier than the simulation. Use `-n 4` locally:
+twelve parallel browsers rendering them saturated a 12-thread machine and
+caused timeouts.
+
+## Visual differences
+
+A visual failure keeps `<name>-actual.png`, `<name>-expected.png` and
+`<name>-diff.png` (changes in red) in the test's `test-results/` folder. If
+the change is intended, rewrite the baselines and review them in the pull
+request:
+
+```text
+python -m pytest tests/test_visual.py --update-baselines
+```
+
+Baselines exist per platform. On a platform without one the test fails and
+keeps the actual image, which can be reviewed and committed as the baseline.
+
 ## Evidence
 
 Each run gets a unique ID. `reports/<id>/` contains a self-contained
@@ -70,7 +97,7 @@ automatically turns a failure into a skip.
 ## Server ownership and ports
 
 ```text
-python scripts/serve_mock.py --host 127.0.0.1 --port 8090
+python -m scripts.serve_mock --host 127.0.0.1 --port 8090
 python -m pytest --base-url http://127.0.0.1:8090
 ```
 
