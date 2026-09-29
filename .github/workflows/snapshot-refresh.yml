@@ -44,10 +44,10 @@ jobs:
           TARGET: snapshot
         run: >-
           python -m pytest tests -m "not framework" -n auto --browser chromium
-          --snapshot-har "$FRESH/pgoriginal.har" --run-id snapshot-fresh
+          --snapshot-har "$FRESH/pgoriginal.har" --run-id snapshot-replay
       - name: Summarize replay
         if: always()
-        run: python scripts/ci_summary.py reports/snapshot-fresh/summary.json
+        run: python scripts/ci_summary.py reports/snapshot-replay/summary.json
       - name: Open or update the drift issue
         if: failure() && github.ref == 'refs/heads/main'
         env:
@@ -74,6 +74,7 @@ jobs:
           name: snapshot-refresh-${{ github.run_attempt }}
           path: |
             reports/snapshot-fresh/
+            reports/snapshot-replay/
             reports/snapshot-record-*/summary.json
           retention-days: 14
           if-no-files-found: error
