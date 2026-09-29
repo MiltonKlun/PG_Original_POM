@@ -1,21 +1,9 @@
-name: Mutation score
+name: Flaky test check
 
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - 'mock_site/**'
-      - 'tests/**'
-      - 'pages/**'
-      - 'components/**'
-      - 'config/**'
-      - 'data/**'
-      - 'conftest.py'
-      - 'scripts/mutation_check.py'
-      - '.github/workflows/mutation.yml'
   workflow_dispatch:
   schedule:
-    - cron: '0 10 * * 1'
+    - cron: '0 3 * * *'
 
 permissions:
   contents: read
@@ -25,10 +13,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  mutation:
-    name: Mutation score (Chromium, mock)
+  flaky:
+    name: Flaky test check (Chromium, mock)
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       TARGET: mock
     steps:
@@ -42,11 +30,12 @@ jobs:
           cache-dependency-path: requirements.txt
       - run: python -m pip install -r requirements.txt
       - run: python -m playwright install --with-deps chromium
-      - run: python scripts/mutation_check.py --min-score 90 --workers auto --output reports/mutation
+      # Five full runs, no retries: any test whose outcome changes is reported.
+      - run: python scripts/flaky_check.py --runs 5 --workers auto --output reports/flaky
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
-          name: mutation-${{ github.run_attempt }}
-          path: reports/mutation/
+          name: flaky-${{ github.run_attempt }}
+          path: reports/
           retention-days: 14
           if-no-files-found: warn

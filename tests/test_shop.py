@@ -1,6 +1,8 @@
 import re
+
 import pytest
 from playwright.sync_api import expect
+
 from config.money import ars_minor_units, format_ars
 from config.test_data import load_data
 

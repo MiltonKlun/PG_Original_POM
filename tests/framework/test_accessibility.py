@@ -1,4 +1,5 @@
 import pytest
+
 from config.accessibility import Violation, axe_source, parse_violations
 
 pytestmark = pytest.mark.framework

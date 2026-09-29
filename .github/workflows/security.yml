@@ -34,7 +34,7 @@ jobs:
       - run: python -m pip check
       - name: Known vulnerabilities in locked dependencies
         run: |
-          python -m pip_audit -r requirements.txt --progress-spinner off
+          python -m pip_audit -r requirements-dev.txt --progress-spinner off
           python -m pip_audit -r requirements-security.txt --progress-spinner off
       - name: Workflow security analysis
         run: zizmor --offline --persona=auditor .github/workflows/

@@ -7,6 +7,7 @@ an unclear scenario failure.
 
 import pytest
 from playwright.sync_api import expect
+
 from config.money import ars_minor_units
 
 pytestmark = [pytest.mark.contract, pytest.mark.live_safe]

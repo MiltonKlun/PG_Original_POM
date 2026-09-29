@@ -13,6 +13,20 @@ python -m pytest tests/framework -q
 The header reports the resolved target, origin and seed. Data is derived from
 seed plus node ID, so rerunning that node does not depend on test order.
 
+## Parallel runs
+
+`python -m pytest -n auto` runs the simulation suite across CPU cores. Each
+worker starts its own local server (ports 8091 and up); reports still land in
+`reports/<id>/`, browser evidence in `test-results/<id>/`, and each worker logs
+to `logs/<id>-gw<n>.log`. In `summary.json` the deselected count is `null`,
+because workers deselect in their own processes. Live runs refuse `-n`.
+
+To look for flakiness locally:
+
+```text
+python scripts/flaky_check.py --runs 5 --workers auto
+```
+
 ## Evidence
 
 Each run gets a unique ID. `reports/<id>/` contains a self-contained

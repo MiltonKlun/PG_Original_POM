@@ -5,18 +5,18 @@ import os
 import socket
 import sys
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from email.message import Message
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
 from pathlib import Path
-from threading import Thread, Event
+from threading import Event, Thread
 from time import monotonic
 from typing import IO, Any, BinaryIO, Self
 from urllib.error import URLError
 from urllib.parse import unquote, urlsplit
-from urllib.request import build_opener, HTTPRedirectHandler, Request
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from config.settings import Settings
 
@@ -162,10 +162,9 @@ def main() -> None:
     args = parser.parse_args()
     with MockServer(args.host, args.port) as server:
         print(f"PG Original mock: {server.url}", flush=True)
-        try:
+        # Ctrl+C exits the context, which closes only our server.
+        with suppress(KeyboardInterrupt):
             Event().wait()
-        except KeyboardInterrupt:
-            pass  # Exiting the context closes only our server.
 
 
 if __name__ == "__main__":

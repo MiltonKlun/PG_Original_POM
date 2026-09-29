@@ -4,10 +4,16 @@ import os
 from collections.abc import Iterator
 
 import pytest
-from config.settings import Settings, eligible
+
 from config.reporting import RunReport
+from config.settings import Settings, check_parallel, eligible, worker_port
 
 SETTINGS = pytest.StashKey[Settings]()
+RUN_REPORT = "pg-run-report"
+
+
+def run_report_blocked(config: pytest.Config) -> bool:
+    return config.pluginmanager.is_blocked(RUN_REPORT)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -17,17 +23,32 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_configure(config: pytest.Config) -> None:
+    # pytest-xdist workers get their own mock port and write evidence into the
+    # controller's run directory; only the controller writes reports.
+    workerinput = getattr(config, "workerinput", None)
     try:
-        config.stash[SETTINGS] = Settings.resolve(
+        settings = Settings.resolve(
             os.environ.get("TARGET", "mock"),
             config.getoption("base_url"),
             config.getoption("seed"),
+            mock_port=worker_port(os.environ.get("PYTEST_XDIST_WORKER")),
         )
+        if workerinput is None:
+            check_parallel(settings.target, config.getoption("numprocesses", None))
     except ValueError as exc:
         raise pytest.UsageError(str(exc)) from exc
-    if not config.option.collectonly:
+    config.stash[SETTINGS] = settings
+    if workerinput is not None:
+        if "pg_output" in workerinput:
+            config.option.output = workerinput["pg_output"]
+        if "pg_log_stem" in workerinput and not config.option.log_file:
+            config.option.log_file = (
+                f"{workerinput['pg_log_stem']}-{workerinput['workerid']}.log"
+            )
+    # `-p no:pg-run-report` (e.g. in git hooks) skips report files entirely.
+    elif not (config.option.collectonly or run_report_blocked(config)):
         config.pluginmanager.register(
-            RunReport(config, config.stash[SETTINGS]), "pg-run-report"
+            RunReport(config, config.stash[SETTINGS]), RUN_REPORT
         )
 
 

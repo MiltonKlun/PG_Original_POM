@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock
+
 import pytest
+
 from pages.contact_page import ContactPage
 from pages.home_page import HomePage
 from pages.product_page import ProductPage

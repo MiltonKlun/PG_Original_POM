@@ -14,7 +14,7 @@ import subprocess
 import sys
 import tempfile
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from time import monotonic
 
@@ -161,10 +161,19 @@ def render_markdown(outcomes: list[Outcome]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def run_suite(workdir: Path, run_id: str) -> tuple[int, str]:
+def run_suite(workdir: Path, run_id: str, workers: str = "0") -> tuple[int, str]:
     env = {**os.environ, "TARGET": "mock"}
     proc = subprocess.run(
-        [sys.executable, "-m", "pytest", *PYTEST_ARGS, "--run-id", run_id],
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            *PYTEST_ARGS,
+            "-n",
+            workers,
+            "--run-id",
+            run_id,
+        ],
         cwd=workdir,
         env=env,
         capture_output=True,
@@ -174,13 +183,15 @@ def run_suite(workdir: Path, run_id: str) -> tuple[int, str]:
     return proc.returncode, proc.stdout + proc.stderr
 
 
-def evaluate(mutant: Mutant, workdir: Path) -> Outcome:
+def evaluate(mutant: Mutant, workdir: Path, workers: str = "0") -> Outcome:
     target = workdir / mutant.file
     original = target.read_text(encoding="utf-8")
     started = monotonic()
     try:
         target.write_text(apply_edits(original, mutant.edits), encoding="utf-8")
-        returncode, output = run_suite(workdir, f"mutation-{mutant.id.lower()}")
+        returncode, output = run_suite(
+            workdir, f"mutation-{mutant.id.lower()}", workers
+        )
     finally:
         target.write_text(original, encoding="utf-8")
     failing = failing_tests(output)
@@ -199,6 +210,9 @@ def evaluate(mutant: Mutant, workdir: Path) -> Outcome:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--min-score", type=float, default=0.0)
+    parser.add_argument(
+        "--workers", default="0", help="pytest-xdist workers per run (e.g. auto)"
+    )
     parser.add_argument("--only", action="append", help="Mutant ID (repeatable)")
     parser.add_argument("--catalog", type=Path, default=CATALOG)
     parser.add_argument("--output", type=Path, default=None)
@@ -210,21 +224,21 @@ def main(argv: list[str] | None = None) -> int:
         if unknown:
             parser.error(f"Unknown mutant IDs: {sorted(unknown)}")
         mutants = [m for m in mutants if m.id in args.only]
-    stamp = f"{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}"
+    stamp = f"{datetime.now(UTC):%Y%m%dT%H%M%SZ}"
     output = args.output or ROOT / "reports" / f"mutation-{stamp}"
 
     scratch = Path(tempfile.mkdtemp(prefix="pg-mutation-"))
     try:
         workdir = scratch / "repo"
         shutil.copytree(ROOT, workdir, ignore=COPY_IGNORE)
-        returncode, log = run_suite(workdir, "mutation-baseline")
+        returncode, log = run_suite(workdir, "mutation-baseline", args.workers)
         if returncode != 0:
             print(log)
             print("Baseline suite failed; mutation score not computed.")
             return 2
         outcomes = []
         for mutant in mutants:
-            outcome = evaluate(mutant, workdir)
+            outcome = evaluate(mutant, workdir, args.workers)
             print(f"{outcome.id} {outcome.status} ({outcome.duration_seconds}s)")
             outcomes.append(outcome)
     finally:

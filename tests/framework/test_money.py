@@ -1,4 +1,5 @@
 import pytest
+
 from config.money import ars_minor_units, format_ars
 
 pytestmark = pytest.mark.framework

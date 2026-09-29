@@ -1,7 +1,9 @@
 import json
 from dataclasses import dataclass
 from typing import Any
+
 from playwright.sync_api import Locator, Page, expect
+
 from config import ui_text
 from pages.base_page import BasePage
 from pages.product_page import ProductPage

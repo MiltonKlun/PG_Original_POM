@@ -2,6 +2,7 @@
 
 import pytest
 from playwright.sync_api import expect
+
 from config.accessibility import scan
 
 pytestmark = [pytest.mark.a11y, pytest.mark.live_safe]
